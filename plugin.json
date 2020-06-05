@@ -1,0 +1,13 @@
+{
+    "id": "graph-analytics",
+    "version": "0.0.0",
+    "meta": {
+        "label": "Graph analytics",
+        "description": "",
+        "author": "",
+        "icon": "icon-link",
+        "licenseInfo": "Apache Software License",
+        "url": "",
+        "tags": ["Graph"]
+    }
+}
