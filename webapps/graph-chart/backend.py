@@ -4,110 +4,10 @@ import pandas as pd
 import json
 import traceback
 import logging
-from functools import reduce
 import time
+from dku_filtering.filtering import filter_dataframe
 
 logger = logging.getLogger(__name__)
-
-
-def numerical_filter(df, filter):
-    conditions = []
-    if filter["minValue"]:
-        conditions += [df[filter['column']] >= filter['minValue']]
-    if filter["maxValue"]:
-        conditions += [df[filter['column']] <= filter['maxValue']]
-    return conditions
-
-
-def alphanum_filter(df, filter):
-    conditions = []
-    excluded_values = []
-    for k, v in filter['excludedValues'].items():
-        if k != '___dku_no_value___':
-            if v:
-                excluded_values += [k]
-        else:
-            if v:
-                conditions += [~df[filter['column']].isnull()]
-    if len(excluded_values) > 0:
-        if filter['columnType'] == 'NUMERICAL':
-            excluded_values = [float(x) for x in excluded_values]
-        conditions += [~df[filter['column']].isin(excluded_values)]
-    return conditions
-
-
-def date_filter(df, filter):
-    if filter["dateFilterType"] == "RANGE":
-        return date_range_filter(df, filter)
-    else:
-        return special_date_filter(df, filter)
-
-
-def date_range_filter(df, filter):
-    conditions = []
-    if filter["minValue"]:
-        conditions += [df[filter['column']] >= pd.Timestamp(filter['minValue'], unit='ms')]
-    if filter["maxValue"]:
-        conditions += [df[filter['column']] <= pd.Timestamp(filter['maxValue'], unit='ms')]
-    return conditions
-
-
-def special_date_filter(df, filter):
-    conditions = []
-    excluded_values = []
-    for k, v in filter['excludedValues'].items():
-        if v:
-            excluded_values += [k]
-    if len(excluded_values) > 0:
-        if filter["dateFilterType"] == "YEAR":
-            conditions += [~df[filter['column']].dt.year.isin(excluded_values)]
-        elif filter["dateFilterType"] == "QUARTER_OF_YEAR":
-            conditions += [~df[filter['column']].dt.quarter.isin([int(k)+1 for k in excluded_values])]
-        elif filter["dateFilterType"] == "MONTH_OF_YEAR":
-            conditions += [~df[filter['column']].dt.month.isin([int(k)+1 for k in excluded_values])]
-        elif filter["dateFilterType"] == "WEEK_OF_YEAR":
-            conditions += [~df[filter['column']].dt.week.isin([int(k)+1 for k in excluded_values])]
-        elif filter["dateFilterType"] == "DAY_OF_MONTH":
-            conditions += [~df[filter['column']].dt.day.isin([int(k)+1 for k in excluded_values])]
-        elif filter["dateFilterType"] == "DAY_OF_WEEK":
-            conditions += [~df[filter['column']].dt.dayofweek.isin(excluded_values)]
-        elif filter["dateFilterType"] == "HOUR_OF_DAY":
-            conditions += [~df[filter['column']].dt.hour.isin(excluded_values)]
-        else:
-            raise Exception("Unknown date filter.")
-
-    return conditions
-
-
-def apply_filter_conditions(df, conditions):
-    """
-    return a function to apply filtering conditions on df
-    """
-    if len(conditions) == 0:
-        return df
-    elif len(conditions) == 1:
-        return df[conditions[0]]
-    else:
-        return df[reduce(lambda c1, c2: c1 & c2, conditions[1:], conditions[0])]
-
-
-def filter_dataframe(df, filters):
-    """
-    return the input dataframe df with filters applied to it
-    """
-    for filter in filters:
-        try:
-            if filter["filterType"] == "NUMERICAL_FACET":
-                df = apply_filter_conditions(df, numerical_filter(df, filter))
-            elif filter["filterType"] == "ALPHANUM_FACET":
-                df = apply_filter_conditions(df, alphanum_filter(df, filter))
-            elif filter["filterType"] == "DATE_FACET":
-                df = apply_filter_conditions(df, date_filter(df, filter))
-        except Exception as e:
-            raise Exception("Error with filter on column {} - {}".format(filter["column"], e))
-    if df.empty:
-        raise Exception("Dataframe is empty after filtering")
-    return df
 
 
 class Graph:
@@ -125,69 +25,133 @@ class Graph:
 
         print(self.__dict__)
 
+    # def create_graph(self, df):
+    #     logger.info("Creating graph object ...")
+    #     start = time.time()
+    #     nodes_set, nodes_nb = set(), 0
+    #     nodes, edges = [], []
+    #     for idx, row in df.iterrows():
+    #         if nodes_nb > self.max_nodes:
+    #             break
+    #         if row[self.source] not in nodes_set:
+    #             nodes.append(self.create_source_node(row))
+    #             nodes_set.add(row[self.source])
+    #             nodes_nb += 1
+    #         if row[self.target] not in nodes_set:
+    #             nodes.append(self.create_target_node(row))
+    #             nodes_set.add(row[self.target])
+    #             nodes_nb += 1
+    #         edges.append(self.create_edge(row))
+
+    #     self.nodes = nodes
+    #     self.edges = edges
+    #     logger.info("Graph object created in {:.4f} seconds".format(time.time()-start))
+
     def create_graph(self, df):
         logger.info("Creating graph object ...")
         start = time.time()
-        nodes_set, nodes_nb = set(), 0
-        nodes, edges = [], []
+        source_nodes, target_nodes = set(), set()
+        nodes_nb = 0
+        nodes = {}
+        edges = []
         for idx, row in df.iterrows():
-            if nodes_nb > self.max_nodes:
+            if nodes_nb >= self.max_nodes:
                 break
-            if row[self.source] not in nodes_set:
-                nodes.append(self.create_source_node(row))
-                nodes_set.add(row[self.source])
+
+            src = row[self.source]
+            tgt = row[self.target]
+            if src not in source_nodes and src not in target_nodes:
+                nodes[src] = self.create_source_node(row)
+                source_nodes.add(src)
+                # nodes_set.add(src)
                 nodes_nb += 1
-            if row[self.target] not in nodes_set:
-                nodes.append(self.create_target_node(row))
-                nodes_set.add(row[self.target])
+            elif src not in source_nodes and src in target_nodes:
+                # nodes[src] = self.update_source_node(row, nodes[src])
+                self.update_source_node(row, nodes[src])
+                source_nodes.add(src)
+
+            if tgt not in source_nodes and tgt not in target_nodes:
+                nodes[tgt] = self.create_target_node(row)
+                target_nodes.add(tgt)
                 nodes_nb += 1
+            elif tgt in source_nodes and tgt not in target_nodes:
+                self.update_target_node(row, nodes[tgt])
+                target_nodes.add(tgt)
+
+            # if row[self.source] not in nodes_set:
+            #     nodes.append(self.create_source_node(row))
+            #     nodes_set.add(row[self.source])
+            #     nodes_nb += 1
+            # if row[self.target] not in nodes_set:
+            #     nodes.append(self.create_target_node(row))
+            #     nodes_set.add(row[self.target])
+            #     nodes_nb += 1
             edges.append(self.create_edge(row))
 
-        self.nodes = nodes
+        for node_id in nodes:
+            self.add_node_title(nodes[node_id])
+        for edge_params in edges:
+            self.add_edge_title(edge_params)
+
+        self.nodes = nodes.values()
         self.edges = edges
         logger.info("Graph object created in {:.4f} seconds".format(time.time()-start))
 
     def create_source_node(self, row):
-        node = {}
-        node['id'] = row[self.source]
-        node['label'] = row[self.source]
-        title = "{}: {}".format(self.source, row[self.source])
+        node = {'id': row[self.source], 'label': row[self.source]}
         if self.source_nodes_color:
             node['group'] = row[self.source_nodes_color]
-            title += "<br>{}: {}".format(self.source_nodes_color, row[self.source_nodes_color])
         if self.source_nodes_size:
             node['value'] = row[self.source_nodes_size]
-            title += "<br>{}: {}".format(self.source_nodes_size, row[self.source_nodes_size])
-        node['title'] = title
         return node
 
     def create_target_node(self, row):
-        node = {}
-        node['id'] = row[self.target]
-        node['label'] = row[self.target]
-        title = "{}: {}".format(self.target, row[self.target])
+        node = {'id': row[self.target], 'label': row[self.target]}
         if self.target_nodes_color:
             node['group'] = row[self.target_nodes_color]
-            title += "<br>{}: {}".format(self.target_nodes_color, row[self.target_nodes_color])
         if self.target_nodes_size:
             node['value'] = row[self.target_nodes_size]
-            title += "<br>{}: {}".format(self.target_nodes_size, row[self.target_nodes_size])
-        node['title'] = title
         return node
 
     def create_edge(self, row):
-        edge = {}
-        edge['from'] = row[self.source]
-        edge['to'] = row[self.target]
-        title = "{} -> {}".format(row[self.source], row[self.target])
+        edge = {'from': row[self.source], 'to': row[self.target]}
         if self.edges_caption:
             edge['label'] = row[self.edges_caption]
-            title += "<br>{}: {}".format(self.edges_caption, row[self.edges_caption])
         if self.edges_width:
             edge['value'] = row[self.edges_width]
-            title += "<br>{}: {}".format(self.edges_width, row[self.edges_width])
-        edge['title'] = title
         return edge
+
+    def update_source_node(self, row, node_params):
+        """ overwrite the old params that were set for the node when it was a target node (or add new params)"""
+        if self.source_nodes_color:
+            node_params['group'] = row[self.source_nodes_color]
+        if self.source_nodes_size:
+            node_params['value'] = row[self.source_nodes_size]
+
+    def update_target_node(self, row, node_params):
+        """ add new params if they were not set for the node when it was a source node """
+        if 'group' not in node_params and self.target_nodes_color:
+            node_params['group'] = row[self.target_nodes_color]
+        if 'value' not in node_params and self.target_nodes_size:
+            node_params['value'] = row[self.target_nodes_size]
+
+    def add_node_title(self, node_params):
+        """ create a nice title string to display on node popup """
+        title = "id: {}".format(node_params['id'])
+        if 'group' in node_params:
+            title += "<br>color: {}".format(node_params['group'])
+        if 'value' in node_params:
+            title += "<br>size: {}".format(node_params['value'])
+        node_params['title'] = title
+
+    def add_edge_title(self, edge_params):
+        """ create a nice title string to display on edge popup """
+        title = "{} -> {}".format(edge_params['from'], edge_params['to'])
+        if 'label' in edge_params:
+            title += "<br>caption: {}".format(edge_params['label'])
+        if 'value' in edge_params:
+            title += "<br>width: {}".format(edge_params['value'])
+        edge_params['title'] = title
 
 
 @app.route('/reformat_data')
