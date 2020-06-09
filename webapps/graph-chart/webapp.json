@@ -1,0 +1,108 @@
+{
+    "meta": {
+        "label": "Graph chart",
+        "description": "",
+        "icon": "icon-link"
+    },
+
+    "baseType": "STANDARD",
+    "hasBackend": "true",
+
+    "chart" : {
+        "datasetParamName": "dataset",
+        "leftBarLabel": "Chart parameters",
+        "leftBarParams": [
+            {
+                "name": "max_nodes",
+                "type": "INT",
+                "label": "Max displayed nodes",
+                "description": "",
+                "mandatory": true,
+                "minI":1,
+                "maxI":2000,
+                "defaultValue": 50
+            },
+            {
+                "type": "SEPARATOR",
+                "label": "Source Nodes Settings"
+            },
+            {
+                "name": "source_nodes_color",
+                "type": "DATASET_COLUMN",
+                "datasetParamName": "dataset",
+                "label": "Color",
+                "description": "",
+                "mandatory": false
+            },
+            {
+                "name": "source_nodes_size",
+                "type": "DATASET_COLUMN",
+                "datasetParamName": "dataset",
+                "label": "Size",
+                "description": "",
+                "mandatory": false
+            },
+            {
+                "type": "SEPARATOR",
+                "label": "Target Nodes Settings"
+            },
+            {
+                "name": "target_nodes_color",
+                "type": "DATASET_COLUMN",
+                "datasetParamName": "dataset",
+                "label": "Color",
+                "description": "",
+                "mandatory": false
+            },
+            {
+                "name": "target_nodes_size",
+                "type": "DATASET_COLUMN",
+                "datasetParamName": "dataset",
+                "label": "Size",
+                "description": "",
+                "mandatory": false
+            },
+            {
+                "type": "SEPARATOR",
+                "label": "Edges Settings"
+            },
+            {
+                "name": "edges_caption",
+                "type": "DATASET_COLUMN",
+                "datasetParamName": "dataset",
+                "label": "Caption",
+                "description": "",
+                "mandatory": false
+            },
+            {
+                "name": "edges_width",
+                "type": "DATASET_COLUMN",
+                "datasetParamName": "dataset",
+                "label": "Width",
+                "description": "",
+                "mandatory": false
+            }
+        ],
+        "topBar": "STD_FORM",
+        "topBarParams": [
+            {
+                "name": "source",
+                "type": "DATASET_COLUMN",
+                "datasetParamName": "dataset",
+                "label": "Source",
+                "description": "",
+                "mandatory": true
+            },
+            {
+                "name": "target",
+                "type": "DATASET_COLUMN",
+                "datasetParamName": "dataset",
+                "label": "Target",
+                "description": "",
+                "mandatory": true
+            }
+        ],
+        "canFilter": true,
+        "canFacet": false
+    }
+}
