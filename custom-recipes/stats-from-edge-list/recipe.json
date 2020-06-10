@@ -1,7 +1,8 @@
 {
     "meta" : {
-        "label" : "Compute statistics from list of edges",
-        "description": "This recipe creates a graph from a list of edges and computes various statistics."
+        "label" : "Compute graph features from a dataset of relations",
+        "description": "This recipe creates a NetworkX graph object and compute graph features.",
+        "icon": "icon-link"
     },
 
     "kind" : "PYTHON",
@@ -10,6 +11,8 @@
     "inputRoles" : [
         {
             "name": "Input Dataset",
+            "label": "Input Dataset",
+            "description": "Rows of the input dataset must have a Source and a Target column.",
             "arity": "UNARY",
             "required": true,
             "acceptsDataset": true
@@ -19,6 +22,8 @@
     "outputRoles" : [
         {
             "name": "Output Dataset",
+            "label": "Output Dataset",
+            "description": "",
             "arity": "UNARY",
             "required": true,
             "acceptsDataset": true
@@ -27,66 +32,107 @@
 
 
     "params": [
-      {
+        {
+            "type": "SEPARATOR",
+            "label": "Graph Parameters"
+        },
+        {
             "name": "node_A",
-            "label" : "node_A",
+            "label" : "Source",
             "type": "COLUMN",
-            "columnRole":"Input Dataset",
-            "description": "The first node",
+            "columnRole": "Input Dataset",
+            "description": "Source nodes column",
             "mandatory" : true
-          
-      },
-      {
+        },
+        {
             "name": "node_B",
-            "label" : "node_B",
+            "label" : "Target",
             "type": "COLUMN",
-            "columnRole":"Input Dataset",
-            "description": "The second node",
+            "columnRole": "Input Dataset",
+            "description": "Target nodes columns",
             "mandatory" : true
-          
-      },
-      {
-         "name": "eigenvector_centrality",
-         "label": "Compute eigenvector centrality",
-         "type": "BOOLEAN",
-         "defaultValue": false,
-         "description": "Eigenvector centrality computes the centrality for a node based on the centrality of its neighbors."
+        },
+        {
+            "name": "directed_graph",
+            "type": "BOOLEAN",
+            "label": "Directed Graph",
+            "description": "",
+            "defaultValue": false
+        },
+        {
+            "name": "output_type",
+            "type": "SELECT",
+            "label": "Output Type",
+            "description": "",
+            "mandatory": true,
+            "selectChoices": [
+                    {"value": "output_nodes","label": "Dataset of nodes"}, 
+                    {"value": "output_edges","label": "Dataset of edges"}
+            ],
+            "defaultValue": "output_nodes"
+        },
+        {
+            "type": "SEPARATOR",
+            "label": "Graph Algorithms"
+        },
+        {
+            "name": "computation_mode",
+            "label": "Features to compute",
+            "type": "SELECT",
+            "selectChoices": [
+                {"value": "compute_all_features", "label": "Compute all features"},
+                {"value": "select_features", "label": "Select algorithms"}
+            ],
+            "defaultValue": "compute_all_features"
+        },
+        {
+            "name": "eigenvector_centrality",
+            "label": "Compute eigenvector centrality",
+            "type": "BOOLEAN",
+            "defaultValue": false,
+            "description": "Eigenvector centrality computes the centrality for a node based on the centrality of its neighbors.",
+            "visibilityCondition": "model.computation_mode == 'select_features'"
 
-      },
-      {
-         "name": "clustering",
-         "label": "Compute clustering coefficient",
-         "type": "BOOLEAN",
-         "defaultValue": false,
-         "description": "For unweighted graphs, the clustering of a node u is the fraction of possible triangles through that node that exist."
-      },
-      {
-         "name": "triangles",
-         "label": "Compute count of triangles",
-         "type": "BOOLEAN",
-         "defaultValue": false,
-         "description": "Finds the number of triangles that include a node as one vertex."
-      },
-      {
-         "name": "closeness",
-         "label": "Compute closeness centrality",
-         "type": "BOOLEAN",
-         "defaultValue": false,
-         "description": "Closeness centrality of a node u is the reciprocal of the sum of the shortest path distances from u to all n-1 other nodes."
-      },
-      {
-         "name": "pagerank",
-         "label": "Compute pagerank",
-         "type": "BOOLEAN",
-         "defaultValue": false,
-         "description": "PageRank computes a ranking of the nodes in the graph G based on the structure of the incoming links."
-      },
-      {
-         "name": "sq_clustering",
-         "label": "Compute square clustering",
-         "type": "BOOLEAN",
-         "defaultValue": false,
-         "description": "Compute the squares clustering coefficient for nodes."
-      }
+        },
+        {
+            "name": "clustering",
+            "label": "Compute clustering coefficient",
+            "type": "BOOLEAN",
+            "defaultValue": false,
+            "description": "For unweighted graphs, the clustering of a node u is the fraction of possible triangles through that node that exist.",
+            "visibilityCondition": "model.computation_mode == 'select_features'"
+        },
+        {
+            "name": "triangles",
+            "label": "Compute count of triangles",
+            "type": "BOOLEAN",
+            "defaultValue": false,
+            "description": "Finds the number of triangles that include a node as one vertex.",
+            "visibilityCondition": "model.directed_graph == false && model.computation_mode == 'select_features'"
+        },
+        {
+            "name": "closeness",
+            "label": "Compute closeness centrality",
+            "type": "BOOLEAN",
+            "defaultValue": false,
+            "description": "Closeness centrality of a node u is the reciprocal of the sum of the shortest path distances from u to all n-1 other nodes.",
+            "visibilityCondition": "model.computation_mode == 'select_features'"
+        },
+        {
+            "name": "pagerank",
+            "label": "Compute pagerank",
+            "type": "BOOLEAN",
+            "defaultValue": false,
+            "description": "PageRank computes a ranking of the nodes in the graph G based on the structure of the incoming links.",
+            "visibilityCondition": "model.computation_mode == 'select_features'"
+        },
+        {
+            "name": "sq_clustering",
+            "label": "Compute square clustering",
+            "type": "BOOLEAN",
+            "defaultValue": false,
+            "description": "Compute the squares clustering coefficient for nodes.",
+            "visibilityCondition": "model.computation_mode == 'select_features'"
+        }
     ]
 }

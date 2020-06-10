@@ -1,7 +1,7 @@
 import dataiku
 from flask import request
 import pandas as pd
-import json
+import simplejson as json
 import traceback
 import logging
 import time
@@ -22,30 +22,9 @@ class Graph:
         self.target_nodes_size = graph_params.get('target_nodes_size', None)
         self.edges_caption = graph_params.get('edges_caption', None)
         self.edges_width = graph_params.get('edges_width', None)
+        self.directed_edges = graph_params.get('directed_edges', False)
 
         print(self.__dict__)
-
-    # def create_graph(self, df):
-    #     logger.info("Creating graph object ...")
-    #     start = time.time()
-    #     nodes_set, nodes_nb = set(), 0
-    #     nodes, edges = [], []
-    #     for idx, row in df.iterrows():
-    #         if nodes_nb > self.max_nodes:
-    #             break
-    #         if row[self.source] not in nodes_set:
-    #             nodes.append(self.create_source_node(row))
-    #             nodes_set.add(row[self.source])
-    #             nodes_nb += 1
-    #         if row[self.target] not in nodes_set:
-    #             nodes.append(self.create_target_node(row))
-    #             nodes_set.add(row[self.target])
-    #             nodes_nb += 1
-    #         edges.append(self.create_edge(row))
-
-    #     self.nodes = nodes
-    #     self.edges = edges
-    #     logger.info("Graph object created in {:.4f} seconds".format(time.time()-start))
 
     def create_graph(self, df):
         logger.info("Creating graph object ...")
@@ -53,7 +32,7 @@ class Graph:
         source_nodes, target_nodes = set(), set()
         nodes_nb = 0
         nodes = {}
-        edges = []
+        edges = {}
         for idx, row in df.iterrows():
             if nodes_nb >= self.max_nodes:
                 break
@@ -63,10 +42,8 @@ class Graph:
             if src not in source_nodes and src not in target_nodes:
                 nodes[src] = self.create_source_node(row)
                 source_nodes.add(src)
-                # nodes_set.add(src)
                 nodes_nb += 1
             elif src not in source_nodes and src in target_nodes:
-                # nodes[src] = self.update_source_node(row, nodes[src])
                 self.update_source_node(row, nodes[src])
                 source_nodes.add(src)
 
@@ -78,23 +55,27 @@ class Graph:
                 self.update_target_node(row, nodes[tgt])
                 target_nodes.add(tgt)
 
-            # if row[self.source] not in nodes_set:
-            #     nodes.append(self.create_source_node(row))
-            #     nodes_set.add(row[self.source])
-            #     nodes_nb += 1
-            # if row[self.target] not in nodes_set:
-            #     nodes.append(self.create_target_node(row))
-            #     nodes_set.add(row[self.target])
-            #     nodes_nb += 1
-            edges.append(self.create_edge(row))
+            if not self.directed_edges:
+                try:
+                    if tgt < src:  # edges are sorted when directed
+                        src, tgt = tgt, src
+                except Exception as e:
+                    logger.info("Exception when comparing source ({}) and target ({}) nodes: {}".format(src, tgt, e))
+                    continue
+            if (src, tgt) not in edges:
+                edges[(src, tgt)] = self.create_edge(row, src, tgt)
+            elif not self.edges_width:  # here edge weight must be computed (cause width is weight by default)
+                self.update_edge(edges[(src, tgt)])
+
+            # edges.append(self.create_edge(row))
 
         for node_id in nodes:
             self.add_node_title(nodes[node_id])
-        for edge_params in edges:
-            self.add_edge_title(edge_params)
+        for edge_id in edges:
+            self.add_edge_title(edges[edge_id])
 
-        self.nodes = nodes.values()
-        self.edges = edges
+        self.nodes = list(nodes.values())
+        self.edges = list(edges.values())
         logger.info("Graph object created in {:.4f} seconds".format(time.time()-start))
 
     def create_source_node(self, row):
@@ -113,13 +94,19 @@ class Graph:
             node['value'] = row[self.target_nodes_size]
         return node
 
-    def create_edge(self, row):
-        edge = {'from': row[self.source], 'to': row[self.target]}
+    def create_edge(self, row, src, tgt):
+        edge = {'from': src, 'to': tgt}
         if self.edges_caption:
             edge['label'] = row[self.edges_caption]
         if self.edges_width:
             edge['value'] = row[self.edges_width]
+        else:  # initialize edge weight
+            edge['value'] = 1
         return edge
+
+    def update_edge(self, edge_params):
+        """ update value (weight) of edges that have already been initialized when self.edges_width is False """
+        edge_params['value'] += 1
 
     def update_source_node(self, row, node_params):
         """ overwrite the old params that were set for the node when it was a target node (or add new params)"""
@@ -174,12 +161,10 @@ def reformat_data():
         graph.create_graph(df)
 
         # nodes, edges = graph.nodes, graph.edges
-        # print("nodes : ", nodes)
-        # print("edges: ", edges)
+        # results = json.dumps({'nodes': graph.nodes}, ignore_nan=True)
 
-        return json.dumps({'nodes': graph.nodes, 'edges': graph.edges})
+        return json.dumps({'nodes': graph.nodes, 'edges': graph.edges}, ignore_nan=True)
 
-        # return json.dumps({'result': df.values.tolist()})
     except Exception as e:
         logger.error(traceback.format_exc())
         return str(e), 500

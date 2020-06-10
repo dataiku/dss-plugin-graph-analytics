@@ -67,6 +67,14 @@
                 "label": "Edges Settings"
             },
             {
+                "name": "edges_width",
+                "type": "DATASET_COLUMN",
+                "datasetParamName": "dataset",
+                "label": "Width",
+                "description": "Weight by default",
+                "mandatory": false
+            },
+            {
                 "name": "edges_caption",
                 "type": "DATASET_COLUMN",
                 "datasetParamName": "dataset",
@@ -75,12 +83,12 @@
                 "mandatory": false
             },
             {
-                "name": "edges_width",
-                "type": "DATASET_COLUMN",
-                "datasetParamName": "dataset",
-                "label": "Width",
+                "name": "directed_edges",
+                "type": "BOOLEAN",
+                "label": "Directed edges",
                 "description": "",
-                "mandatory": false
+                "mandatory": false,
+                "defaultValue": false
             }
         ],
         "topBar": "STD_FORM",

@@ -3,15 +3,27 @@ let webAppConfig = dataiku.getWebAppConfig()['webAppConfig'];
 let webAppDesc = dataiku.getWebAppDesc()['chart']
 
 
-function draw(nodes, edges, options) {
+function stopStabilization(network, time){
+    setTimeout(() => {
+            network.stopSimulation();
+            console.log("Stabilization stopped !")
+        },
+        time
+    );
+}
+
+function draw(nodes, edges, options, time) {
     var container = document.getElementById('graph-chart');
     var data = {
         nodes: nodes,
         edges: edges
     };
     var network = new vis.Network(container, data, options);
+    console.log("Stabilizing ...")
+    stopStabilization(network, time);
+    
 }
-
+console.warn("hello Chart")
 window.parent.postMessage("sendConfig", "*");
 
 window.addEventListener('message', function(event) {
@@ -38,7 +50,6 @@ window.addEventListener('message', function(event) {
             dataiku.webappMessages.displayFatalError(e.message);
             return;
         }
-        console.log("coucou0")
         
         var config = {
             dataset_name: webAppConfig['dataset'],
@@ -50,28 +61,33 @@ window.addEventListener('message', function(event) {
             target_nodes_color: webAppConfig['target_nodes_color'],
             target_nodes_size: webAppConfig['target_nodes_size'],
             edges_caption: webAppConfig['edges_caption'],
-            edges_width: webAppConfig['edges_width']
-        }   
+            edges_width: webAppConfig['edges_width'],
+            directed_edges: webAppConfig['directed_edges']
+        }
+        // var directed_edges = webAppConfig['directed_edges']
 
         dataiku.webappBackend.get('reformat_data', {"config": JSON.stringify(config), "filters": JSON.stringify(filters)})
             .then(
                 function(data){
+
                     var nodes = data['nodes'];
                     var edges = data['edges'];
 
-                    // console.log("nodes: ", nodes)
-                    // console.log("edges: ", edges)
+                    console.log("nodes: ", nodes)
+                    console.log("edges: ", edges)
 
                     var options = {
                         nodes: {
                             shape: "dot",
+                            size: 20,
                             scaling: {
                                 min: 10,
                                 max: 30
                             },
                             font: {
                                 size: 12,
-                                face: "Tahoma"
+                                face: "Tahoma",
+                                strokeWidth: 7
                             }
                         },
                         
@@ -84,7 +100,10 @@ window.addEventListener('message', function(event) {
                             color: { inherit: true },
                             smooth: {
                                 type: "continuous"
-                            }
+                            },
+                            arrows: {
+								to: {enabled: config.directed_edges}
+							},
                         },
                         interaction: {
                             hideEdgesOnDrag: true,
@@ -95,7 +114,14 @@ window.addEventListener('message', function(event) {
                                 enabled: true
                             }
                         },
-                        // physics: false
+                        layout: {
+                            improvedLayout: false,
+                            hierarchical: {
+								enabled: false,
+								sortMethod: 'hubsize'
+							}
+						},
+
                         physics: {
                             forceAtlas2Based: {
                                 gravitationalConstant: -26,
@@ -106,11 +132,14 @@ window.addEventListener('message', function(event) {
                             maxVelocity: 50,
                             solver: 'forceAtlas2Based',
                             timestep: 0.35,
-                            stabilization: {iterations: 150}
+                            stabilization: {
+                                iterations: 200,
+                                fit: true
+                            }
                         }
                     };
                     $('#graph-chart').html('');
-                    draw(nodes, edges, options);
+                    var network = draw(nodes, edges, options, 5000);
                 }
             ).catch(error => {
                 dataiku.webappMessages.displayFatalError(error);

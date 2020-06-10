@@ -1,5 +1,6 @@
-networkx
-python-louvain
-flask
-matplotlib
-scipy
+networkx==2.4
+python-louvain==0.14
+flask==1.1.2
+matplotlib==3.2.1
+scipy==1.4.1
+simplejson
