@@ -3,4 +3,5 @@ python-louvain==0.14
 flask==1.1.2
 matplotlib==3.2.1
 scipy==1.4.1
-simplejson
+simplejson==3.17.0
+pygraphviz==1.5
