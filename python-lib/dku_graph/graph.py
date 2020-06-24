@@ -140,20 +140,20 @@ class Graph:
             title += "<br>width: {}".format(edge_params['value'])
         edge_params['title'] = title
 
-    def compute_layout(self):
-        logger.info("Computing layout ...")
-        start = time.time()
-        if self.directed_edges:
-            G = nx.Graph()
-        else:
-            G = nx.DiGraph()
+    # def compute_layout(self):
+    #     logger.info("Computing layout ...")
+    #     start = time.time()
+    #     if self.directed_edges:
+    #         G = nx.Graph()
+    #     else:
+    #         G = nx.DiGraph()
 
-        G.add_nodes_from(list(self.nodes.keys()))
-        G.add_edges_from(list(self.edges.keys()))
+    #     G.add_nodes_from(list(self.nodes.keys()))
+    #     G.add_edges_from(list(self.edges.keys()))
 
-        positions = nx.nx_agraph.graphviz_layout(G, prog='sfdp')
+    #     positions = nx.nx_agraph.graphviz_layout(G, prog='sfdp')
 
-        for node, pos in positions.items():
-            self.nodes[node].update({'x': pos[0], 'y': pos[1]})
+    #     for node, pos in positions.items():
+    #         self.nodes[node].update({'x': pos[0], 'y': pos[1]})
 
-        logger.info("Layout computed in {:.4f} seconds".format(time.time()-start))
+    #     logger.info("Layout computed in {:.4f} seconds".format(time.time()-start))

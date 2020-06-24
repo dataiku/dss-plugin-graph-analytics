@@ -66,7 +66,7 @@ window.addEventListener('message', function(event) {
         }
         // var directed_edges = webAppConfig['directed_edges']
 
-        dataiku.webappBackend.get('reformat_data', {"config": JSON.stringify(config), "filters": JSON.stringify(filters)})
+        dataiku.webappBackend.get('get_graph_data', {"config": JSON.stringify(config), "filters": JSON.stringify(filters)})
             .then(
                 function(data){
 
@@ -123,22 +123,22 @@ window.addEventListener('message', function(event) {
 							}
 						},
 
-                        // physics: {
-                        //     forceAtlas2Based: {
-                        //         gravitationalConstant: -26,
-                        //         centralGravity: 0.005,
-                        //         springLength: 230,
-                        //         springConstant: 0.18
-                        //     },
-                        //     maxVelocity: 50,
-                        //     solver: 'forceAtlas2Based',
-                        //     timestep: 0.35,
-                        //     stabilization: {
-                        //         iterations: 200,
-                        //         fit: true
-                        //     }
-                        // }
-                        physics: false
+                        physics: {
+                            forceAtlas2Based: {
+                                gravitationalConstant: -26,
+                                centralGravity: 0.005,
+                                springLength: 230,
+                                springConstant: 0.18
+                            },
+                            maxVelocity: 50,
+                            solver: 'forceAtlas2Based',
+                            timestep: 0.35,
+                            stabilization: {
+                                iterations: 200,
+                                fit: true
+                            }
+                        }
+                        // physics: false
                     };
                     $('#graph-chart').html('');
                     var network = draw(nodes, edges, options, 5000);

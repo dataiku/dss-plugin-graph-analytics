@@ -9,8 +9,8 @@ from dku_graph.graph import Graph
 logger = logging.getLogger(__name__)
 
 
-@app.route('/reformat_data')
-def reformat_data():
+@app.route('/get_graph_data')
+def get_graph_data():
     try:
         config = json.loads(request.args.get('config', None))
         filters = json.loads(request.args.get('filters', None))
@@ -27,7 +27,7 @@ def reformat_data():
 
         graph = Graph(config)
         graph.create_graph(df)
-        graph.compute_layout()
+        # graph.compute_layout()
 
         nodes, edges = list(graph.nodes.values()), list(graph.edges.values())
         # results = json.dumps({'nodes': graph.nodes}, ignore_nan=True)
