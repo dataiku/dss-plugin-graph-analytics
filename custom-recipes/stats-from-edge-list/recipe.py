@@ -24,7 +24,7 @@ else:
 # Always run: nodes degree
 logger.info("Graph Features - Computing degree")
 deg = pd.Series(nx.degree(graph), name='degree')
-stats = pd.DataFrame(list(deg), columns=[params['source'], 'degree'])
+stats = pd.DataFrame(list(deg), columns=['node_name', 'degree'])
 
 if params['eigenvector_centrality']:
     logger.info("Graph Features - Computing eigenvector centrality")
@@ -66,25 +66,35 @@ if not params['directed_graph']:
     cco.columns = ['node_name', 'connected_component_id']
     cco['connected_component_size'] = cco.groupby('connected_component_id')['connected_component_id'].transform('count')
 
+logger.info("eig: ", eig)
+
 # Putting all together
 if params['output_type'] == 'output_edges':
-    df_output = df.merge(stats, on=params['source'], how='left')
+    # keep all rows in output
+    df_output = df
+    node_columns = ['source', 'target']  # merge graph features with both source and target node columns
 else:
-    df_output = stats
+    # output one row per node
+    df_output = stats['node_name'].to_frame()
+    df_output.columns = [params['source']]
+    node_columns = ['source']
 
-if params['eigenvector_centrality']:
-    df_output = df_output.merge(eig, left_on=params['source'], right_on='node_name', how='left').drop(['node_name'], axis=1)
-if params['clustering']:
-    df_output = df_output.merge(clu, left_on=params['source'], right_on='node_name', how='left').drop(['node_name'], axis=1)
-if params['triangles'] and not params['directed_graph']:
-    df_output = df_output.merge(tri, left_on=params['source'], right_on='node_name', how='left').drop(['node_name'], axis=1)
-if params['closeness']:
-    df_output = df_output.merge(clo, left_on=params['source'], right_on='node_name', how='left').drop(['node_name'], axis=1)
-if params['pagerank']:
-    df_output = df_output.merge(pag, left_on=params['source'], right_on='node_name', how='left').drop(['node_name'], axis=1)
-if params['sq_clustering']:
-    df_output = df_output.merge(squ, left_on=params['source'], right_on='node_name', how='left').drop(['node_name'], axis=1)
-if not params['directed_graph']:
-    df_output = df_output.merge(cco, left_on=params['source'], right_on='node_name', how='left').drop(['node_name'], axis=1)
+for node_col in node_columns:
+    df_output = df_output.merge(stats, left_on=params[node_col], right_on='node_name', how='left', suffixes=('_source', '_target')).drop(['node_name'], axis=1)
+
+    if params['eigenvector_centrality']:
+        df_output = df_output.merge(eig, left_on=params[node_col], right_on='node_name', how='left', suffixes=('_source', '_target')).drop(['node_name'], axis=1)
+    if params['clustering']:
+        df_output = df_output.merge(clu, left_on=params[node_col], right_on='node_name', how='left', suffixes=('_source', '_target')).drop(['node_name'], axis=1)
+    if params['triangles'] and not params['directed_graph']:
+        df_output = df_output.merge(tri, left_on=params[node_col], right_on='node_name', how='left', suffixes=('_source', '_target')).drop(['node_name'], axis=1)
+    if params['closeness']:
+        df_output = df_output.merge(clo, left_on=params[node_col], right_on='node_name', how='left', suffixes=('_source', '_target')).drop(['node_name'], axis=1)
+    if params['pagerank']:
+        df_output = df_output.merge(pag, left_on=params[node_col], right_on='node_name', how='left', suffixes=('_source', '_target')).drop(['node_name'], axis=1)
+    if params['sq_clustering']:
+        df_output = df_output.merge(squ, left_on=params[node_col], right_on='node_name', how='left', suffixes=('_source', '_target')).drop(['node_name'], axis=1)
+    if not params['directed_graph']:
+        df_output = df_output.merge(cco, left_on=params[node_col], right_on='node_name', how='left', suffixes=('_source', '_target')).drop(['node_name'], axis=1)
 
 output_dataset.write_with_schema(df_output)

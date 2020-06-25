@@ -107,7 +107,6 @@ class Graph:
     def update_edge(self, edge_params):
         """ update value (weight) of edges that have already been initialized when self.edges_width is False """
         edge_params['value'] += 1
-
     def update_source_node(self, row, node_params):
         """ overwrite the old params that were set for the node when it was a target node (or add new params)"""
         if self.source_nodes_color:
@@ -140,20 +139,21 @@ class Graph:
             title += "<br>width: {}".format(edge_params['value'])
         edge_params['title'] = title
 
-    # def compute_layout(self):
-    #     logger.info("Computing layout ...")
-    #     start = time.time()
-    #     if self.directed_edges:
-    #         G = nx.Graph()
-    #     else:
-    #         G = nx.DiGraph()
+    def compute_layout(self):
+        logger.info("Computing layout ...")
+        start = time.time()
+        if self.directed_edges:
+            G = nx.Graph()
+        else:
+            G = nx.DiGraph()
 
-    #     G.add_nodes_from(list(self.nodes.keys()))
-    #     G.add_edges_from(list(self.edges.keys()))
+        G.add_nodes_from(list(self.nodes.keys()))
+        G.add_edges_from(list(self.edges.keys()))
 
-    #     positions = nx.nx_agraph.graphviz_layout(G, prog='sfdp')
+        # positions = nx.nx_agraph.graphviz_layout(G, prog='sfdp')
+        # positions = nx.nx_pydot.pydot_layout(G, prog='sfdp')
 
-    #     for node, pos in positions.items():
-    #         self.nodes[node].update({'x': pos[0], 'y': pos[1]})
+        # for node, pos in positions.items():
+        #     self.nodes[node].update({'x': pos[0], 'y': pos[1]})
 
-    #     logger.info("Layout computed in {:.4f} seconds".format(time.time()-start))
+        # logger.info("Layout computed in {:.4f} seconds".format(time.time()-start))
