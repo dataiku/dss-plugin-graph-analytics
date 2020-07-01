@@ -1,58 +1,58 @@
 # -*- coding: utf-8 -*-
 import dataiku
-from dataiku.customrecipe import *
-
+from dataiku.customrecipe import get_recipe_config
+from utils import get_input_dataset, get_output_dataset, get_bipartite_recipe_params
+from constants import Constants
 import pandas as pd
 import networkx as nx
 from networkx.algorithms import bipartite
+import logging
+logger = logging.getLogger(__name__)
 
 
 # Read recipe config
-input_name = get_input_names_for_role('Input Dataset')[0]
-output_name = get_output_names_for_role('Output Dataset')[0]
+input_dataset = get_input_dataset('Input Dataset')
+output_dataset = get_output_dataset('Output Dataset')
 
-CREATE_GRAPH_OF = get_recipe_config()['create_graph_of']
-LINKED_BY = get_recipe_config()['linked_by']
+recipe_config = get_recipe_config()
+params = get_bipartite_recipe_params(recipe_config)
 
+# CREATE_GRAPH_OF = get_recipe_config()['create_graph_of']
+# params[Constants.LINKED_BY] = get_recipe_config()['params[Constants.LINKED_BY]']
 
 # List of necessary columns
 columns = []
-columns.append(CREATE_GRAPH_OF)
-columns.append(LINKED_BY)
-
+columns.append(params[Constants.GRAPH_OF])
+columns.append(params[Constants.LINKED_BY])
 
 # Recipe input
-df = dataiku.Dataset(input_name).get_dataframe(columns=columns)
-print "[+] Dataset loaded..."
+df = input_dataset.get_dataframe(columns=columns)
+logger.info("Bipartite Graph - Dataset loaded...")
 
 # Delete nulls
-df = df[(df[CREATE_GRAPH_OF].notnull()) & (df[LINKED_BY].notnull())]
-print "[+] Removed null values..."
+df = df[(df[params[Constants.GRAPH_OF]].notnull()) & (df[params[Constants.LINKED_BY]].notnull())]
+logger.info("Bipartite Graph - Removed null values...")
 
 # Dedup
 dd = df.groupby(columns).size().reset_index().rename(columns={0: 'w'})
-print "[+] Created deduplicated dataset..."
-
+logger.info("Bipartite Graph - Created deduplicated dataset...")
 
 # Creating the bipartite graph
 G = nx.Graph()
-G.add_nodes_from( dd[CREATE_GRAPH_OF].unique(),  bipartite=0 )
-G.add_nodes_from( dd[LINKED_BY].unique(), bipartite=1 )
-G.add_edges_from( zip(dd[CREATE_GRAPH_OF], dd[LINKED_BY]) )
-print "[+] Created bipartite graph..."
-
+G.add_nodes_from(dd[params[Constants.GRAPH_OF]].unique(),  bipartite=0)
+G.add_nodes_from(dd[params[Constants.LINKED_BY]].unique(), bipartite=1)
+G.add_edges_from(zip(dd[params[Constants.GRAPH_OF]], dd[params[Constants.LINKED_BY]]))
+logger.info("Bipartite Graph - Created bipartite graph...")
 
 # Projecting the main projected graph
-graph = bipartite.projected_graph(G, dd[CREATE_GRAPH_OF].unique(), multigraph=False)
-print "[+] Created projected graph..."
-
+graph = bipartite.projected_graph(G, dd[params[Constants.GRAPH_OF]].unique(), multigraph=False)
+logger.info("Bipartite Graph - Created projected graph...")
 
 # Outputting the corresponding data frame
 d = pd.DataFrame(list(graph.edges()))
-d.columns = [CREATE_GRAPH_OF + '__1', CREATE_GRAPH_OF + '__2']
-
+d.columns = [params[Constants.GRAPH_OF] + '__1', params[Constants.GRAPH_OF] + '__2']
 
 # Recipe outputs
-print "[+] Writing output dataset..."
-graph = dataiku.Dataset(output_name)
-graph.write_with_schema(d)
+logger.info("Bipartite Graph - Writing output dataset...")
+# graph = output_dataset
+output_dataset.write_with_schema(d)

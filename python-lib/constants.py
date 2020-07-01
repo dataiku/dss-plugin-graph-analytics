@@ -1,0 +1,13 @@
+class Constants:
+    SOURCE = "source"
+    TARGET = "target"
+    NODE_NAME = "node_name"
+    EIGEN_CENTRALITY = "eigenvector_centrality"
+    CLUSTERING = "clustering"
+    TRIANGLES = "triangles"
+    CLOSENESS = "closeness"
+    PAGERANK = "pagerank"
+    SQ_CLUSTERING = "sq_clustering"
+    DIRECTED = "directed_graph"
+    GRAPH_OF = "create_graph_of"    
+    LINKED_BY = "linked_by"

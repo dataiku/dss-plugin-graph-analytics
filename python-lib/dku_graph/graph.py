@@ -107,6 +107,7 @@ class Graph:
     def update_edge(self, edge_params):
         """ update value (weight) of edges that have already been initialized when self.edges_width is False """
         edge_params['value'] += 1
+
     def update_source_node(self, row, node_params):
         """ overwrite the old params that were set for the node when it was a target node (or add new params)"""
         if self.source_nodes_color:
