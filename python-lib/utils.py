@@ -47,4 +47,5 @@ def get_bipartite_recipe_params(recipe_config):
     params = {}
     params[Constants.GRAPH_OF] = recipe_config['create_graph_of']
     params[Constants.LINKED_BY] = recipe_config['linked_by']
+    params[Constants.WEIGHTED] = recipe_config['weighted']
     return params

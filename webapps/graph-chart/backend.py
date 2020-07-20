@@ -27,13 +27,12 @@ def get_graph_data():
 
         graph = Graph(config)
         graph.create_graph(df)
-        # graph.compute_layout()
+        graph.compute_layout()
 
         nodes, edges = list(graph.nodes.values()), list(graph.edges.values())
         # results = json.dumps({'nodes': graph.nodes}, ignore_nan=True)
 
-        return json.dumps({
-            'nodes': nodes, 'edges': edges}, ignore_nan=True)
+        return json.dumps({'nodes': nodes, 'edges': edges, 'groups': graph.groups}, ignore_nan=True)
 
     except Exception as e:
         logger.error(traceback.format_exc())

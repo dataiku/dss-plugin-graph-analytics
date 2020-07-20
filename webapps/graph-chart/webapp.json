@@ -23,8 +23,16 @@
                 "defaultValue": 50
             },
             {
+                "name": "directed_edges",
+                "type": "BOOLEAN",
+                "label": "Directed edges",
+                "description": "",
+                "mandatory": false,
+                "defaultValue": true
+            },
+            {
                 "type": "SEPARATOR",
-                "label": "Source Nodes Settings"
+                "label": "Source nodes"
             },
             {
                 "name": "source_nodes_color",
@@ -44,7 +52,7 @@
             },
             {
                 "type": "SEPARATOR",
-                "label": "Target Nodes Settings"
+                "label": "Target nodes"
             },
             {
                 "name": "target_nodes_color",
@@ -64,7 +72,7 @@
             },
             {
                 "type": "SEPARATOR",
-                "label": "Edges Settings"
+                "label": "Edges"
             },
             {
                 "name": "edges_width",
@@ -78,17 +86,9 @@
                 "name": "edges_caption",
                 "type": "DATASET_COLUMN",
                 "datasetParamName": "dataset",
-                "label": "Caption",
+                "label": "Label",
                 "description": "",
                 "mandatory": false
-            },
-            {
-                "name": "directed_edges",
-                "type": "BOOLEAN",
-                "label": "Directed edges",
-                "description": "",
-                "mandatory": false,
-                "defaultValue": false
             }
         ],
         "topBar": "STD_FORM",

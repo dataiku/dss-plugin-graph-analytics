@@ -9,5 +9,6 @@ class Constants:
     PAGERANK = "pagerank"
     SQ_CLUSTERING = "sq_clustering"
     DIRECTED = "directed_graph"
-    GRAPH_OF = "create_graph_of"    
+    GRAPH_OF = "create_graph_of"
     LINKED_BY = "linked_by"
+    WEIGHTED = "weighted"

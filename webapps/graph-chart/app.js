@@ -72,11 +72,14 @@ window.addEventListener('message', function(event) {
 
                     var nodes = data['nodes'];
                     var edges = data['edges'];
-
+                    var groups = data['groups']
+                    
                     console.log("nodes: ", nodes)
                     console.log("edges: ", edges)
+                    console.log("groups: ", groups)
 
                     var options = {
+                        groups: groups,
                         nodes: {
                             shape: "dot",
                             size: 20,
@@ -123,22 +126,22 @@ window.addEventListener('message', function(event) {
 							}
 						},
 
-                        physics: {
-                            forceAtlas2Based: {
-                                gravitationalConstant: -26,
-                                centralGravity: 0.005,
-                                springLength: 230,
-                                springConstant: 0.18
-                            },
-                            maxVelocity: 50,
-                            solver: 'forceAtlas2Based',
-                            timestep: 0.35,
-                            stabilization: {
-                                iterations: 200,
-                                fit: true
-                            }
-                        }
-                        // physics: false
+                        // physics: {
+                        //     forceAtlas2Based: {
+                        //         gravitationalConstant: -26,
+                        //         centralGravity: 0.005,
+                        //         springLength: 230,
+                        //         springConstant: 0.18
+                        //     },
+                        //     maxVelocity: 50,
+                        //     solver: 'forceAtlas2Based',
+                        //     timestep: 0.35,
+                        //     stabilization: {
+                        //         iterations: 200,
+                        //         fit: true
+                        //     }
+                        // }
+                        physics: false
                     };
                     $('#graph-chart').html('');
                     var network = draw(nodes, edges, options, 5000);

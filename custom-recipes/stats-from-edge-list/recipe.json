@@ -2,7 +2,7 @@
     "meta" : {
         "label" : "Compute graph features from a dataset of relations",
         "description": "This recipe creates a NetworkX graph object and compute graph features.",
-        "icon": "icon-link"
+        "icon": "icon-cogs"
     },
 
     "kind" : "PYTHON",

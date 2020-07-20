@@ -33,6 +33,13 @@
       "label": "Linked by",
       "type": "COLUMN",
       "columnRole":"Input Dataset"
+    },
+    {
+      "name": "weighted",
+      "label": "Weighted graph",
+      "type": "BOOLEAN",
+      "defaultValue": false,
+      "description": ""
     }
   ]
 }

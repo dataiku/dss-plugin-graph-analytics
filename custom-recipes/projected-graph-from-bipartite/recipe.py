@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-import dataiku
 from dataiku.customrecipe import get_recipe_config
 from utils import get_input_dataset, get_output_dataset, get_bipartite_recipe_params
 from constants import Constants
@@ -45,14 +44,20 @@ G.add_edges_from(zip(dd[params[Constants.GRAPH_OF]], dd[params[Constants.LINKED_
 logger.info("Bipartite Graph - Created bipartite graph...")
 
 # Projecting the main projected graph
-graph = bipartite.projected_graph(G, dd[params[Constants.GRAPH_OF]].unique(), multigraph=False)
-logger.info("Bipartite Graph - Created projected graph...")
+if params[Constants.WEIGHTED]:
+    graph = bipartite.weighted_projected_graph(G, dd[params[Constants.GRAPH_OF]].unique())
+    edges_list = [(src, tgt, w['weight']) for src, tgt, w in graph.edges(data=True)]
+    df = pd.DataFrame(list(edges_list))
+    df.columns = [params[Constants.GRAPH_OF] + '_1', params[Constants.GRAPH_OF] + '_2', 'weight']
+else:
+    graph = bipartite.projected_graph(G, dd[params[Constants.GRAPH_OF]].unique(), multigraph=False)
+    # Outputting the corresponding data frame
+    df = pd.DataFrame(list(graph.edges()))
+    df.columns = [params[Constants.GRAPH_OF] + '_1', params[Constants.GRAPH_OF] + '_2']
 
-# Outputting the corresponding data frame
-d = pd.DataFrame(list(graph.edges()))
-d.columns = [params[Constants.GRAPH_OF] + '__1', params[Constants.GRAPH_OF] + '__2']
+logger.info("Bipartite Graph - Created projected graph...")
 
 # Recipe outputs
 logger.info("Bipartite Graph - Writing output dataset...")
 # graph = output_dataset
-output_dataset.write_with_schema(d)
+output_dataset.write_with_schema(df)

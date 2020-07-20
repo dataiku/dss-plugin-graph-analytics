@@ -1,5 +1,6 @@
 import time
 import networkx as nx
+import numpy as np
 # import pandas as pd
 import logging
 
@@ -29,6 +30,9 @@ class Graph:
         nodes_nb = 0
         nodes = {}
         edges = {}
+
+        self.check_data_type(df)
+
         for idx, row in df.iterrows():
             if nodes_nb >= self.max_nodes:
                 break
@@ -70,6 +74,14 @@ class Graph:
         for edge_id in edges:
             self.add_edge_title(edges[edge_id])
 
+        # set color range for numerical color column
+        self.groups = {}
+        if self.numerical_color:
+            self.group_values = set()
+            for node_id in nodes:
+                self.add_group_value(nodes[node_id])
+            self.create_groups()
+
         # compute layout
         self.nodes = nodes
         self.edges = edges
@@ -97,7 +109,7 @@ class Graph:
     def create_edge(self, row, src, tgt):
         edge = {'from': src, 'to': tgt}
         if self.edges_caption:
-            edge['label'] = row[self.edges_caption]
+            edge['label'] = str(row[self.edges_caption])
         if self.edges_width:
             edge['value'] = row[self.edges_width]
         else:  # initialize edge weight
@@ -153,8 +165,38 @@ class Graph:
 
         # positions = nx.nx_agraph.graphviz_layout(G, prog='sfdp')
         # positions = nx.nx_pydot.pydot_layout(G, prog='sfdp')
+        positions = nx.spring_layout(G, scale=1000, iterations=200, seed=1337)
 
-        # for node, pos in positions.items():
-        #     self.nodes[node].update({'x': pos[0], 'y': pos[1]})
+        # print("positions: ", positions)
 
-        # logger.info("Layout computed in {:.4f} seconds".format(time.time()-start))
+        for node, pos in positions.items():
+            self.nodes[node].update({'x': pos[0], 'y': pos[1]})
+
+        logger.info("Layout computed in {:.4f} seconds".format(time.time()-start))
+
+    def check_data_type(self, df):
+        for col in [self.source_nodes_size, self.target_nodes_size, self.edges_width]:
+            if col and df[col].dtype not in [np.dtype(int), np.dtype(float)]:
+                raise ValueError("Columns for size or width must be numerical but column '{}' is not".format(col))
+
+        src_col, tgt_col = self.source_nodes_color, self.target_nodes_color
+        self.numerical_color = False
+        if src_col and tgt_col:
+            if df[src_col].dtype in [np.dtype(int), np.dtype(float)] and df[tgt_col].dtype in [np.dtype(int), np.dtype(float)]:
+                self.numerical_color = True
+        elif src_col and df[src_col].dtype in [np.dtype(int), np.dtype(float)]:
+            self.numerical_color = True
+        elif tgt_col and df[tgt_col].dtype in [np.dtype(int), np.dtype(float)]:
+            self.numerical_color = True
+
+    def add_group_value(self, node_params):
+        if 'group' in node_params:
+            self.group_values.add(node_params['group'])
+
+    def create_groups(self):
+        """ for numerical column as color column, compute a range of color from white to red depending on the value """
+        if len(self.group_values) > 10:  # no color palette with only few numbers
+            mini, maxi = min(self.group_values), max(self.group_values)
+            for group in self.group_values:
+                x = (maxi - group)/(maxi - mini) * 225  # would be white if 255
+                self.groups[group] = {'color': "rgb(255, {0}, {0})".format(x)}
