@@ -3,6 +3,11 @@ from dataiku.customrecipe import get_input_names_for_role, get_output_names_for_
 from constants import Constants
 
 
+class AlgorithmError(Exception):
+    """ Raised when error is from the Algorithm """
+    pass
+
+
 def get_input_dataset(role):
     names = get_input_names_for_role(role)
     return dataiku.Dataset(names[0]) if len(names) > 0 else None
@@ -18,12 +23,11 @@ def get_analytics_recipe_params(recipe_config):
     params[Constants.SOURCE] = recipe_config['node_A']
     params[Constants.TARGET] = recipe_config['node_B']
 
-    # new parameters
     params[Constants.DIRECTED] = recipe_config.get('directed_graph', False)
-    params['output_type'] = recipe_config.get('output_type', 'output_nodes')
-    params['computation_mode'] = recipe_config.get('computation_mode', 'select_features')
+    params[Constants.OUTPUT_TYPE] = recipe_config.get('output_type', 'output_nodes')
+    params[Constants.COMPUTATION_MODE] = recipe_config.get('computation_mode', 'select_features')
 
-    if params['computation_mode'] != 'compute_all_features':
+    if params[Constants.COMPUTATION_MODE] != 'compute_all_features':
         params[Constants.EIGEN_CENTRALITY] = recipe_config.get('eigenvector_centrality', False)
         params[Constants.CLUSTERING] = recipe_config.get('clustering', False)
         params[Constants.CLOSENESS] = recipe_config.get('closeness', False)
@@ -40,6 +44,30 @@ def get_analytics_recipe_params(recipe_config):
         # algorithm only for undirected graphs
         params[Constants.TRIANGLES] = not params[Constants.DIRECTED]
 
+    return params
+
+
+def get_clustering_recipe_params(recipe_config):
+    params = {}
+    params[Constants.SOURCE] = recipe_config['source']
+    params[Constants.TARGET] = recipe_config['target']
+
+    params[Constants.WEIGHT] = recipe_config.get('weight', None)
+
+    params[Constants.DIRECTED] = recipe_config.get('directed_graph', False)
+    params[Constants.OUTPUT_TYPE] = recipe_config.get('output_type', 'output_nodes')
+    params[Constants.COMPUTATION_MODE] = recipe_config.get('computation_mode', 'select_features')
+
+    if params[Constants.COMPUTATION_MODE] != 'compute_all_features':
+        params[Constants.FASTGREEDY] = recipe_config.get('fastgreedy', False)
+        params[Constants.MULTILEVEL] = recipe_config.get('multilevel', False)
+        params[Constants.INFOMAP] = recipe_config.get('infomap', False)
+        params[Constants.WALKTRAP] = recipe_config.get('walktrap', False)
+    else:
+        params[Constants.FASTGREEDY] = True
+        params[Constants.MULTILEVEL] = True
+        params[Constants.INFOMAP] = True
+        params[Constants.WALKTRAP] = True
     return params
 
 

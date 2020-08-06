@@ -14,9 +14,9 @@ def get_graph_data():
     try:
         config = json.loads(request.args.get('config', None))
         filters = json.loads(request.args.get('filters', None))
+        scale_ratio = float(request.args.get('scale_ratio', 1))
 
         dataset_name = config.get('dataset_name')
-        # graph_params = get_graph_params(config)
 
         df = dataiku.Dataset(dataset_name).get_dataframe()
         if df.empty:
@@ -27,10 +27,9 @@ def get_graph_data():
 
         graph = Graph(config)
         graph.create_graph(df)
-        graph.compute_layout()
+        graph.compute_layout(scale_ratio=scale_ratio)
 
         nodes, edges = list(graph.nodes.values()), list(graph.edges.values())
-        # results = json.dumps({'nodes': graph.nodes}, ignore_nan=True)
 
         return json.dumps({'nodes': nodes, 'edges': edges, 'groups': graph.groups}, ignore_nan=True)
 

@@ -27,6 +27,19 @@ function checkWebAppConfig(webAppConfig) {
     }
 }
 
+function quadraticScalingFunction(min, max, total, value) {
+    if (max === min) {
+        return 0;
+    } else {
+        var scale = 1 / (max - min);
+        return Math.pow(Math.max(0,(value - min)*scale), 2);
+    }
+}
+
+function isEqual(object1, object2) {
+    return JSON.stringify(object1) == JSON.stringify(object2)
+}
+
 
 dataiku.webappBackend = (function() {
     function getUrl(path) {
@@ -78,4 +91,3 @@ dataiku.webappMessages = (function() {
     }
     return  Object.freeze({displayFatalError})
 })();
-

@@ -1,17 +1,17 @@
 {
     "meta" : {
-        "label" : "Graph features",
-        "description": "This recipe uses the python NetworkX library to compute graph features for each node from a dataset of relations.",
-        "icon": "icon-cogs",
-        "displayOrderRank": 2
+        "label" : "Graph clustering",
+        "description": "This recipe uses the python igraph library to compute clustering algorithms from a dataset of relations. It works better when the graph is connected (one connected component).",
+        "icon": "icon-sitemap",
+        "displayOrderRank": 1
     },
 
     "kind" : "PYTHON",
-    "selectableFromDataset" : "Input Dataset",
+    "selectableFromDataset" : "input_dataset",
 
     "inputRoles" : [
         {
-            "name": "Input Dataset",
+            "name": "input_dataset",
             "label": "Input Dataset",
             "description": "Rows of the input dataset must have a Source and a Target column.",
             "arity": "UNARY",
@@ -22,7 +22,7 @@
 
     "outputRoles" : [
         {
-            "name": "Output Dataset",
+            "name": "output_dataset",
             "label": "Output Dataset",
             "description": "",
             "arity": "UNARY",
@@ -31,27 +31,34 @@
         }
     ],
 
-
     "params": [
         {
             "type": "SEPARATOR",
             "label": "Graph Parameters"
         },
         {
-            "name": "node_A",
+            "name": "source",
             "label" : "Source",
             "type": "COLUMN",
-            "columnRole": "Input Dataset",
+            "columnRole": "input_dataset",
             "description": "Source nodes column",
             "mandatory" : true
         },
         {
-            "name": "node_B",
+            "name": "target",
             "label" : "Target",
             "type": "COLUMN",
-            "columnRole": "Input Dataset",
+            "columnRole": "input_dataset",
             "description": "Target nodes columns",
             "mandatory" : true
+        },
+        {
+            "name": "weight",
+            "label" : "Weight",
+            "type": "COLUMN",
+            "columnRole": "input_dataset",
+            "description": "Column with edges weights (optional)",
+            "mandatory" : false
         },
         {
             "name": "directed_graph",
@@ -74,65 +81,48 @@
         },
         {
             "type": "SEPARATOR",
-            "label": "Graph features algorithms"
+            "label": "Clustering algorithms"
         },
         {
             "name": "computation_mode",
-            "label": "Features to compute",
+            "label": "Algorithms to compute",
             "type": "SELECT",
             "selectChoices": [
                 {"value": "compute_all_features", "label": "Compute all algorithms"},
                 {"value": "select_features", "label": "Select algorithms"}
             ],
             "defaultValue": "compute_all_features"
-        },
+        },        
         {
-            "name": "eigenvector_centrality",
-            "label": "Eigenvector centrality",
+            "name": "fastgreedy",
+            "label": "Fastgreedy",
             "type": "BOOLEAN",
             "defaultValue": false,
-            "description": "Eigenvector centrality computes the centrality for a node based on the centrality of its neighbors",
-            "visibilityCondition": "model.computation_mode == 'select_features'"
-
-        },
-        {
-            "name": "clustering",
-            "label": "Clustering coefficient",
-            "type": "BOOLEAN",
-            "defaultValue": false,
-            "description": "For unweighted graphs, the clustering of a node u is the fraction of possible triangles through that node that exist",
-            "visibilityCondition": "model.computation_mode == 'select_features'"
-        },
-        {
-            "name": "triangles",
-            "label": "Count of triangles",
-            "type": "BOOLEAN",
-            "defaultValue": false,
-            "description": "Finds the number of triangles that include a node as one vertex",
+            "description": "Community structure based on the greedy optimization of modularity",
             "visibilityCondition": "model.directed_graph == false && model.computation_mode == 'select_features'"
         },
         {
-            "name": "closeness",
-            "label": "Closeness centrality",
+            "name": "multilevel",
+            "label": "Multilevel",
             "type": "BOOLEAN",
             "defaultValue": false,
-            "description": "Closeness centrality of a node u is the reciprocal of the sum of the shortest path distances from u to all n-1 other nodes",
+            "description": "Community structure based on the multilevel algorithm of Blondel et al.",
+            "visibilityCondition": "model.directed_graph == false && model.computation_mode == 'select_features'"
+        },
+        {
+            "name": "infomap",
+            "label": "Infomap",
+            "type": "BOOLEAN",
+            "defaultValue": false,
+            "description": "Finds the community structure of the network according to the Infomap method of Martin Rosvall and Carl T",
             "visibilityCondition": "model.computation_mode == 'select_features'"
         },
         {
-            "name": "pagerank",
-            "label": "Pagerank",
+            "name": "walktrap",
+            "label": "Walktrap",
             "type": "BOOLEAN",
             "defaultValue": false,
-            "description": "PageRank computes a ranking of the nodes in the graph G based on the structure of the incoming links",
-            "visibilityCondition": "model.computation_mode == 'select_features'"
-        },
-        {
-            "name": "sq_clustering",
-            "label": "Square clustering",
-            "type": "BOOLEAN",
-            "defaultValue": false,
-            "description": "Compute the squares clustering coefficient for nodes",
+            "description": "Community detection algorithm of Latapy & Pons, based on random walks",
             "visibilityCondition": "model.computation_mode == 'select_features'"
         }
     ]

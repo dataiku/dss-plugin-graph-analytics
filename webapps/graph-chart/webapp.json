@@ -19,7 +19,7 @@
                 "description": "+/- one node",
                 "mandatory": true,
                 "minI":1,
-                "maxI":2000,
+                "maxI":10000,
                 "defaultValue": 50
             },
             {
@@ -32,47 +32,76 @@
             },
             {
                 "type": "SEPARATOR",
-                "label": "Source nodes"
+                "label": "Advanced"
+            },
+            {
+                "name": "advanced_parameters",
+                "type": "BOOLEAN",
+                "label": "Show advanced options",
+                "description": "",
+                "mandatory": false,
+                "defaultValue": false
+            },
+            {
+                "type": "SEPARATOR",
+                "label": "Nodes colors",
+                "visibilityCondition": "model.advanced_parameters"
             },
             {
                 "name": "source_nodes_color",
                 "type": "DATASET_COLUMN",
                 "datasetParamName": "dataset",
-                "label": "Color",
+                "label": "Source nodes attribute",
                 "description": "",
-                "mandatory": false
-            },
-            {
-                "name": "source_nodes_size",
-                "type": "DATASET_COLUMN",
-                "datasetParamName": "dataset",
-                "label": "Size",
-                "description": "",
-                "mandatory": false
-            },
-            {
-                "type": "SEPARATOR",
-                "label": "Target nodes"
+                "mandatory": false,
+                "visibilityCondition": "model.advanced_parameters"
             },
             {
                 "name": "target_nodes_color",
                 "type": "DATASET_COLUMN",
                 "datasetParamName": "dataset",
-                "label": "Color",
+                "label": "Target nodes attribute",
                 "description": "",
-                "mandatory": false
+                "mandatory": false,
+                "visibilityCondition": "model.advanced_parameters"
             },
+            {
+                "name": "numerical_colors",
+                "type": "BOOLEAN",
+                "label": "Numerical colors",
+                "description": "Use a numerical scale for colors",
+                "mandatory": false,
+                "defaultValue": false,
+                "visibilityCondition": "model.advanced_parameters"
+            },
+            {
+                "type": "SEPARATOR",
+                "label": "Nodes sizes",
+                "visibilityCondition": "model.advanced_parameters"
+            },
+            {
+                "name": "source_nodes_size",
+                "type": "DATASET_COLUMN",
+                "datasetParamName": "dataset",
+                "label": "Source nodes attribute",
+                "description": "",
+                "mandatory": false,
+                "visibilityCondition": "model.advanced_parameters"
+            },
+            
             {
                 "name": "target_nodes_size",
                 "type": "DATASET_COLUMN",
                 "datasetParamName": "dataset",
-                "label": "Size",
+                "label": "Target nodes attribute",
                 "description": "",
-                "mandatory": false
+                "mandatory": false,
+                "visibilityCondition": "model.advanced_parameters"
             },
             {
                 "type": "SEPARATOR",
-                "label": "Edges"
+                "label": "Edges",
+                "visibilityCondition": "model.advanced_parameters"
             },
             {
                 "name": "edges_width",
@@ -80,7 +109,8 @@
                 "datasetParamName": "dataset",
                 "label": "Width",
                 "description": "Weight by default",
-                "mandatory": false
+                "mandatory": false,
+                "visibilityCondition": "model.advanced_parameters"
             },
             {
                 "name": "edges_caption",
@@ -88,7 +118,8 @@
                 "datasetParamName": "dataset",
                 "label": "Label",
                 "description": "",
-                "mandatory": false
+                "mandatory": false,
+                "visibilityCondition": "model.advanced_parameters"
             }
         ],
         "topBar": "STD_FORM",
