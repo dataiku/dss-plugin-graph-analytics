@@ -3,10 +3,9 @@ from flask import request
 import simplejson as json
 import traceback
 import logging
+import numpy as np
 from dku_filtering.filtering import filter_dataframe
 from dku_graph.graph import Graph
-
-logger = logging.getLogger(__name__)
 
 
 @app.route('/get_graph_data')
@@ -27,12 +26,14 @@ def get_graph_data():
 
         graph = Graph(config)
         graph.create_graph(df)
-        graph.compute_layout(scale_ratio=scale_ratio)
+
+        scale = np.sqrt(len(graph.nodes)) * 100
+        graph.compute_layout(scale=scale, scale_ratio=scale_ratio)
 
         nodes, edges = list(graph.nodes.values()), list(graph.edges.values())
 
         return json.dumps({'nodes': nodes, 'edges': edges, 'groups': graph.groups}, ignore_nan=True)
 
     except Exception as e:
-        logger.error(traceback.format_exc())
+        logging.error(traceback.format_exc())
         return str(e), 500

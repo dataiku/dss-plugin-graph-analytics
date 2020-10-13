@@ -1,18 +1,18 @@
 import time
+import random
 import numpy as np
 import pandas as pd
 import logging
 import igraph
-
-
-def rescale_positions(positions, scale=1):
-    """ return a numpy array of scaled positions between -scale and +scale """ 
-    positions -= positions.mean()
-    positions = scale * positions / abs(positions.max())
-    return positions
+from constants import EXISTING_COLORS
 
 
 class Graph:
+    """
+    class to create a graph object that consists of two dictionaries:
+    - nodes: keys are nodes id and values are dictionaries of nodes properties (id, group, value, title, x, y)
+    - edges: keys are pairs of nodes id (source, target) and values are dictionaries of edges properties (from, to, label, value, title)
+    """
 
     def __init__(self, graph_params):
         self.source = graph_params.get('source', None)
@@ -28,6 +28,9 @@ class Graph:
         self.numerical_colors = graph_params.get('numerical_colors', False)
 
     def create_graph(self, df):
+        """
+        iterate over the datframe and add nodes and edges to the graph object
+        """
         logging.info("Creating graph object ...")
         start = time.time()
         source_nodes, target_nodes = set(), set()
@@ -168,53 +171,66 @@ class Graph:
 
         return iGraph, id_to_node
 
-    def _transform_positions(self, positions, scale_ratio=1, remove_empty_zones=-1):
+    def _contract_nodes(self, positions, translation_factor=0.95, std_nb=2):
         """
-        remove empty zones by translating nodes that are too far (distance on one axis more than than 2 STD away from other nodes)
-        (do it if there are more than remove_empty_zones nodes, do nothing if it's -1)
-        and rescale positions based on the total number of nodes
+        contract nodes by removing empty zones between them, nodes that are 'too' far from others
+        are translated toward their neighbors
+
+        :param positions: a 2D-array of x and y positions
+        :param translation_factor: how much of the distance to the closest node (one one axis) to remove
+        :param std_nb: nodes are 'too' far if the distance to the closest node on one axis is more than
+        the average distance between nodes + 'std_nb' standard-deviation
         """
-        # remove empty zones when more than remove_empty_zones nodes
-        N = len(positions)
-        if remove_empty_zones != -1 and N > remove_empty_zones:
-            columns = ['x', 'y']
-            translation_factor = 0.95
-            df = pd.DataFrame(positions, columns=columns)
-            df['id'] = df.index
+        columns = ['x', 'y']
+        df = pd.DataFrame(positions, columns=columns)
+        df['id'] = df.index
 
-            for col in columns:
-                df = df.sort_values(by=[col])
-                df['{}_diff'.format(col)] = df[col] - df[col].shift(1)
-                df = df.sort_values(by=['{}_diff'.format(col)], ascending=False).reset_index(drop=True)
+        for col in columns:
+            df = df.sort_values(by=[col])
+            df['{}_diff'.format(col)] = df[col] - df[col].shift(1)
+            df = df.sort_values(by=['{}_diff'.format(col)], ascending=False).reset_index(drop=True)
 
-                # only do translation when diff is higher than mean + 2 * std
-                outliers_bound = df['{}_diff'.format(col)].mean() + 2 * df['{}_diff'.format(col)].std()
+            outliers_bound = df['{}_diff'.format(col)].mean() + std_nb * df['{}_diff'.format(col)].std()
 
-                i = 0
+            i = 0
+            threshold = df.loc[i, col]
+            diff = df.loc[i, '{}_diff'.format(col)]
+            while diff > outliers_bound:
+                mask = (df[col] >= threshold)
+                df_valid = df[mask]
+                df.loc[mask, col] = df_valid[col] - diff * translation_factor
+
+                i += 1
                 threshold = df.loc[i, col]
                 diff = df.loc[i, '{}_diff'.format(col)]
-                while diff > outliers_bound:
-                    mask = (df[col] >= threshold)
-                    df_valid = df[mask]
-                    df.loc[mask, col] = df_valid[col] - diff * translation_factor
 
-                    i += 1
-                    threshold = df.loc[i, col]
-                    diff = df.loc[i, '{}_diff'.format(col)]
+            logging.info("{} translations done in axis {}".format(i, col))
 
-                logging.info("{} translations done in axis {}".format(i, col))
+        df = df.sort_values(by=['id'], ascending=True).reset_index(drop=True)
+        return df[columns].values
 
-            df = df.sort_values(by=['id'], ascending=True).reset_index(drop=True)
+    def _rescale_positions(self, positions, scale):
+        """ return a numpy array of scaled positions between -scale and +scale """
+        positions -= positions.mean()
+        positions = scale * positions / abs(positions.max())
+        return positions
 
-            positions = df[columns].values
-
-        scale = 500 + np.sqrt(N) * 100
-        positions[:, 0] = rescale_positions(positions[:, 0], scale=scale * scale_ratio)  # x-axis
-        positions[:, 1] = rescale_positions(positions[:, 1], scale=scale)  # y-axis
+    def _transform_positions(self, positions, scale=1, scale_ratio=1):
+        """
+        rescale positions using 'scale' for the y-axis and 'scale'*'scale_ratio' for the x-axis
+        """
+        positions[:, 0] = self._rescale_positions(positions[:, 0], scale=scale*scale_ratio)  # x-axis
+        positions[:, 1] = self._rescale_positions(positions[:, 1], scale=scale)  # y-axis
 
         return positions
 
-    def compute_layout(self, scale_ratio=1):
+    def compute_layout(self, scale, scale_ratio):
+        """
+        create an iGraph object from the Graph class,
+        compute nodes positions using the Fruchterman-Reingold layout algorithm of iGraph,
+        tranform and rescale the positions to improve the layout,
+        update the nodes properties with the positions
+        """
         logging.info("Computing layout ...")
         start = time.time()
 
@@ -222,7 +238,10 @@ class Graph:
 
         positions = np.array(iGraph.layout_fruchterman_reingold(grid=False))
 
-        positions = self._transform_positions(positions, scale_ratio=scale_ratio, remove_empty_zones=200)
+        if len(positions) > 200:
+            positions = self._contract_nodes(positions)
+
+        positions = self._transform_positions(positions, scale, scale_ratio)
 
         for i, pos in enumerate(positions):
             self.nodes[id_to_node[i]].update({'x': pos[0], 'y': pos[1]})
@@ -262,14 +281,19 @@ class Graph:
         for numerical column as color column, compute a range of color from white to red depending on the value
         """
         self.groups["nogroup"] = {'color': "rgba(0, 125, 255, 1)"}
-        # if self.numerical_color and len(self.group_values) > 10:  # no color palette with only few numbers
         if self.numerical_colors:
             mini, maxi = min(self.group_values), max(self.group_values)
             for group in self.group_values:
                 x = (maxi - group)/(maxi - mini) * 225  # would be white if 255
                 self.groups[group] = {'color': "rgba(255, {0}, {0}, 1)".format(x)}
         else:
+            c, unique_colors = 0, len(EXISTING_COLORS)
             for group in self.group_values:
                 if group != "nogroup":
-                    color = list(np.random.choice(range(50, 200), size=3))
-                    self.groups[group] = {'color': "rgba({}, {}, {}, 1)".format(color[0], color[1], color[2])}
+                    c += 1
+                    if c < unique_colors:
+                        color = random.choice(EXISTING_COLORS)
+                    else:  # all existing colors have been used
+                        color_code = list(np.random.choice(range(50, 200), size=3))
+                        color = "rgba({}, {}, {}, 1)".format(color_code[0], color_code[1], color_code[2])
+                    self.groups[group] = {'color': color}

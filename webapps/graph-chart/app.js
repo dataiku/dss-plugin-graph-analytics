@@ -152,21 +152,7 @@ window.addEventListener('message', function(event) {
 								sortMethod: 'hubsize'
 							}
 						},
-                        // physics: {
-                        //     forceAtlas2Based: {
-                        //         gravitationalConstant: -26,
-                        //         centralGravity: 0.005,
-                        //         springLength: 230,
-                        //         springConstant: 0.18
-                        //     },
-                        //     maxVelocity: 50,
-                        //     solver: 'forceAtlas2Based',
-                        //     timestep: 0.35,
-                        //     stabilization: {
-                        //         iterations: 200,
-                        //         fit: true
-                        //     }
-                        // }
+
                         physics: false
                     };
                     document.getElementById("spinner").style.display = "none";
