@@ -17,7 +17,7 @@ def get_graph_data():
 
         dataset_name = config.get('dataset_name')
 
-        df = dataiku.Dataset(dataset_name).get_dataframe()
+        df = dataiku.Dataset(dataset_name).get_dataframe(limit=100000)
         if df.empty:
             raise Exception("Dataframe is empty")
 
@@ -26,8 +26,6 @@ def get_graph_data():
 
         graph = Graph(config)
         graph.create_graph(df)
-
-        print("nodes: ", list(graph.nodes.values()))
 
         scale = np.sqrt(len(graph.nodes)) * 100
         graph.compute_layout(scale=scale, scale_ratio=scale_ratio)

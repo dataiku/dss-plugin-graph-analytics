@@ -1,4 +1,3 @@
-// let webAppConfig = dataiku.getWebAppConfig()['webAppConfig'];
 let webAppDesc = dataiku.getWebAppDesc()['chart']
 var webAppConfig;
 var filters;

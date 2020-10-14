@@ -1,4 +1,4 @@
-@import '/plugins/graph-analytics/resource/style.css';
+@import '/static/public/styles/1.0.0/dku-styles.css';
 
 #graph-stats {
   position: absolute;
