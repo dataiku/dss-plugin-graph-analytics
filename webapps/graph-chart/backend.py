@@ -27,6 +27,8 @@ def get_graph_data():
         graph = Graph(config)
         graph.create_graph(df)
 
+        print("nodes: ", list(graph.nodes.values()))
+
         scale = np.sqrt(len(graph.nodes)) * 100
         graph.compute_layout(scale=scale, scale_ratio=scale_ratio)
 

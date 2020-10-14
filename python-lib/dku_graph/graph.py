@@ -74,8 +74,6 @@ class Graph:
             elif not self.edges_width:  # here edge weight must be computed (cause width is weight by default)
                 self._update_edge(edges[(src, tgt)])
 
-            # edges.append(self._create_edge(row))
-
         for node_id in nodes:
             self._add_node_title(nodes[node_id])
         for edge_id in edges:
@@ -97,7 +95,7 @@ class Graph:
         node = {'id': row[self.source], 'label': row[self.source]}
         if self.source_nodes_color:
             node['group'] = row[self.source_nodes_color]
-        if self.source_nodes_size:
+        if self.source_nodes_size and not np.isnan(row[self.source_nodes_size]):
             node['value'] = row[self.source_nodes_size]
         return node
 
@@ -105,7 +103,7 @@ class Graph:
         node = {'id': row[self.target], 'label': row[self.target]}
         if self.target_nodes_color:
             node['group'] = row[self.target_nodes_color]
-        if self.target_nodes_size:
+        if self.target_nodes_size and not np.isnan(row[self.target_nodes_size]):
             node['value'] = row[self.target_nodes_size]
         return node
 
@@ -114,7 +112,8 @@ class Graph:
         if self.edges_caption:
             edge['label'] = str(row[self.edges_caption])
         if self.edges_width:
-            edge['value'] = row[self.edges_width]
+            if not np.isnan(row[self.edges_width]):
+                edge['value'] = row[self.edges_width]
         else:  # initialize edge weight
             edge['value'] = 1
         return edge
@@ -127,14 +126,14 @@ class Graph:
         """ overwrite the old params that were set for the node when it was a target node (or add new params)"""
         if self.source_nodes_color:
             node_params['group'] = row[self.source_nodes_color]
-        if self.source_nodes_size:
+        if self.source_nodes_size and not np.isnan(row[self.source_nodes_size]):
             node_params['value'] = row[self.source_nodes_size]
 
     def _update_target_node(self, row, node_params):
         """ add new params if they were not set for the node when it was a source node """
         if 'group' not in node_params and self.target_nodes_color:
             node_params['group'] = row[self.target_nodes_color]
-        if 'value' not in node_params and self.target_nodes_size:
+        if 'value' not in node_params and self.target_nodes_size and not np.isnan(row[self.target_nodes_size]):
             node_params['value'] = row[self.target_nodes_size]
 
     def _add_node_title(self, node_params):
@@ -257,16 +256,6 @@ class Graph:
             for label, col in [('Source', self.source_nodes_color), ('Target', self.target_nodes_color)]:
                 if col and df[col].dtype not in [np.dtype(int), np.dtype(float)]:
                     raise ValueError("{} nodes color column must be numerical but column '{}' is not".format(label, col))
-
-        # src_col, tgt_col = self.source_nodes_color, self.target_nodes_color
-        # self.numerical_color = False
-        # if src_col and tgt_col:
-        #     if df[src_col].dtype in [np.dtype(float)] and df[tgt_col].dtype in [np.dtype(float)]:
-        #         self.numerical_color = True
-        # elif src_col and df[src_col].dtype in [np.dtype(float)]:
-        #     self.numerical_color = True
-        # elif tgt_col and df[tgt_col].dtype in [np.dtype(float)]:
-        #     self.numerical_color = True
 
     def _add_group_value(self, node_params):
         """ add all unique groups to self.group_values and add 'nogroup' for nodes without a group """

@@ -26,8 +26,6 @@ function draw(nodes, edges, options, time) {
         edges: edges
     };
     return new vis.Network(container, data, options);
-    // console.log("Stabilizing ...")
-    // stopStabilization(network, time);
 }
 
 window.parent.postMessage("sendConfig", "*");
@@ -94,8 +92,6 @@ window.addEventListener('message', function(event) {
         var chart_height = document.body.getBoundingClientRect().height;
         var chart_width = document.body.getBoundingClientRect().width;
         var scale_ratio = Math.max(Math.min(chart_width/chart_height, 2), 0.5)
-
-        console.log("scale_ratio: ", scale_ratio)
 
         dataiku.webappBackend.get('get_graph_data', {"config": JSON.stringify(config), "filters": JSON.stringify(filters), "scale_ratio": scale_ratio})
             .then(
@@ -176,8 +172,6 @@ window.addEventListener('message', function(event) {
 function neighbourhoodHighlight(params) {
 
     console.log("just double clicked on: ", params)
-    // console.log("allNodes: ", allNodes)
-    // if something is selected:
     if (params.nodes.length > 0) {
       highlightActive = true;
       var i, j;
