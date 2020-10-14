@@ -1,7 +1,7 @@
 {
     "meta": {
         "label": "Graph chart",
-        "description": "",
+        "description": "Custom chart to visualize datasets as graphs. These datasets must have source and target columns.",
         "icon": "icon-link"
     },
 
@@ -19,7 +19,7 @@
                 "description": "+/- one node",
                 "mandatory": true,
                 "minI":1,
-                "maxI":10000,
+                "maxI":5000,
                 "defaultValue": 50
             },
             {
