@@ -9,16 +9,13 @@ var highlightActive = false;
 var nodesDataset;
 var edgesDataset;
 
-function stopStabilization(network, time){
-    setTimeout(() => {
-            network.stopSimulation();
-            console.log("Stabilization stopped !")
-        },
-        time
-    );
+var globalThreadNum = 0;
+
+function sleep (time) {
+    return new Promise((resolve) => setTimeout(resolve, time));
 }
 
-function draw(nodes, edges, options, time) {
+function draw(nodes, edges, options) {
     var container = document.getElementById('graph-chart');
     var data = {
         nodes: nodes,
@@ -92,78 +89,90 @@ window.addEventListener('message', function(event) {
         var chart_width = document.body.getBoundingClientRect().width;
         var scale_ratio = Math.max(Math.min(chart_width/chart_height, 2), 0.5)
 
-        dataiku.webappBackend.get('get_graph_data', {"config": JSON.stringify(config), "filters": JSON.stringify(filters), "scale_ratio": scale_ratio})
-            .then(
-                function(data){
-                    nodesDataset = new vis.DataSet(data['nodes']);
-                    edgesDataset = new vis.DataSet(data['edges']);
-                    var groups = data['groups'];
+        globalThreadNum += 1;
+        var thisThreadNum = globalThreadNum;
+        console.log(`waiting for new threads before calling backend`);
+        sleep(800).then(() => {  // waiting before calling backend that no new thread was called during a small time interval 
+            if (thisThreadNum < globalThreadNum) {  // another thread incremented globalThreadNum during the time interval
+                console.log(`backend not called - overridden by new thread`);
+                return;
+            } else {        
+                console.log(`calling backend`);
+                dataiku.webappBackend.get('get_graph_data', {"config": JSON.stringify(config), "filters": JSON.stringify(filters), "scale_ratio": scale_ratio})
+                    .then(
+                        function(data){
+                            console.log(`backend done`);
+                            nodesDataset = new vis.DataSet(data['nodes']);
+                            edgesDataset = new vis.DataSet(data['edges']);
+                            var groups = data['groups'];
 
-                    var options = {
-                        groups: groups,
-                        nodes: {
-                            shape: "dot",
-                            size: 20,
-                            scaling: {
-                                min: 10,
-                                max: 50                            },
-                            font: {
-                                size: 12,
-                                face: "Tahoma",
-                                strokeWidth: 7
-                            }
-                        },
-                        
-                        edges:{
-                            width: 1,
-                            scaling: {
-                                min: 1,
-                                max: 10,
-                                label: false,
-                                customScalingFunction: quadraticScalingFunction
-                            },
-                            color: { inherit: true },
-                            smooth: {
-                                type: "continuous"
-                            },
-                            arrows: {
-								to: {enabled: config.directed_edges}
-							},
-                        },
-                        interaction: {
-                            hideEdgesOnDrag: false,
-                            hideEdgesOnZoom: true,
-                            tooltipDelay: 200,
-                            hoverConnectedEdges: true,
-                            navigationButtons: true,
-                            keyboard: {
-                                enabled: true
-                            }
-                        },
-                        layout: {
-                            improvedLayout: true,
-                            hierarchical: {
-								enabled: false,
-								sortMethod: 'hubsize'
-							}
-						},
+                            var options = {
+                                groups: groups,
+                                nodes: {
+                                    shape: "dot",
+                                    size: 20,
+                                    scaling: {
+                                        min: 10,
+                                        max: 50                            
+                                    },
+                                    font: {
+                                        size: 12,
+                                        face: "Tahoma",
+                                        strokeWidth: 7
+                                    }
+                                },
+                                
+                                edges:{
+                                    width: 1,
+                                    scaling: {
+                                        min: 1,
+                                        max: 10,
+                                        label: false,
+                                        customScalingFunction: quadraticScalingFunction
+                                    },
+                                    color: { inherit: true },
+                                    smooth: {
+                                        type: "continuous"
+                                    },
+                                    arrows: {
+                                        to: {enabled: config.directed_edges}
+                                    },
+                                },
+                                interaction: {
+                                    hideEdgesOnDrag: false,
+                                    hideEdgesOnZoom: true,
+                                    tooltipDelay: 200,
+                                    hoverConnectedEdges: true,
+                                    navigationButtons: false,
+                                    keyboard: {
+                                        enabled: true
+                                    }
+                                },
+                                layout: {
+                                    improvedLayout: true,
+                                    hierarchical: {
+                                        enabled: false,
+                                        sortMethod: 'hubsize'
+                                    }
+                                },
+                                physics: false
+                            };
+                            document.getElementById("spinner").style.display = "none";
+                            network = draw(nodesDataset, edgesDataset, options);
 
-                        physics: false
-                    };
-                    document.getElementById("spinner").style.display = "none";
-                    network = draw(nodesDataset, edgesDataset, options, 3000);
+                            document.getElementById("graph-stats").innerHTML = `${nodesDataset.length} nodes<br>${edgesDataset.length} edges`
 
-                    document.getElementById("graph-stats").innerHTML = `${nodesDataset.length} nodes<br>${edgesDataset.length} edges`
+                            allNodes = nodesDataset.get({ returnType: "Object" });
 
-                    allNodes = nodesDataset.get({ returnType: "Object" });
-
-                    network.on("doubleClick", neighbourhoodHighlight);
-                }
-            ).catch(error => {
-                console.warn("just catched an error")
-                document.getElementById("spinner").style.display = "none";
-                dataiku.webappMessages.displayFatalError(error);
-            });
+                            network.on("doubleClick", neighbourhoodHighlight);
+                        }
+                    ).catch(error => {
+                        console.warn("just catched an error")
+                        document.getElementById("spinner").style.display = "none";
+                        dataiku.webappMessages.displayFatalError(error);
+                    });
+            }
+        });
     }
 });
 
