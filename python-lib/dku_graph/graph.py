@@ -236,6 +236,7 @@ class Graph:
         iGraph, id_to_node = self._create_igraph()
 
         positions = np.array(iGraph.layout_fruchterman_reingold(grid=False))
+        # positions = np.array(iGraph.layout_lgl())
 
         if len(positions) > 200:
             positions = self._contract_nodes(positions)
@@ -276,12 +277,11 @@ class Graph:
                 x = (maxi - group)/(maxi - mini) * 225  # would be white if 255
                 self.groups[group] = {'color': "rgba(255, {0}, {0}, 1)".format(x)}
         else:
-            c, unique_colors = 0, len(EXISTING_COLORS)
+            colors = EXISTING_COLORS[:]
             for group in self.group_values:
                 if group != "nogroup":
-                    c += 1
-                    if c < unique_colors:
-                        color = random.choice(EXISTING_COLORS)
+                    if len(colors) > 0:
+                        color = colors.pop()
                     else:  # all existing colors have been used
                         color_code = list(np.random.choice(range(50, 200), size=3))
                         color = "rgba({}, {}, {}, 1)".format(color_code[0], color_code[1], color_code[2])
