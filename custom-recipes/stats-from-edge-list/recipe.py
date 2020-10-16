@@ -14,14 +14,14 @@ output_dataset = get_output_dataset('Output Dataset')
 recipe_config = get_recipe_config()
 params = get_analytics_recipe_params(recipe_config)
 
-df = input_dataset.get_dataframe()
+input_df = input_dataset.get_dataframe()
 
 start = time.time()
 logging.info("Graph analytics - Creating NetworkX graph ...")
 if params[Constants.DIRECTED]:
-    graph = nx.from_pandas_edgelist(df, source=params[Constants.SOURCE], target=params[Constants.TARGET], create_using=nx.DiGraph)
+    graph = nx.from_pandas_edgelist(input_df, source=params[Constants.SOURCE], target=params[Constants.TARGET], create_using=nx.DiGraph)
 else:
-    graph = nx.from_pandas_edgelist(df, source=params[Constants.SOURCE], target=params[Constants.TARGET], create_using=nx.Graph)
+    graph = nx.from_pandas_edgelist(input_df, source=params[Constants.SOURCE], target=params[Constants.TARGET], create_using=nx.Graph)
 logging.info("Graph analytics - NetworkX graph created in {:.4f} seconds".format(time.time()-start))
 
 # Always run: nodes degree
@@ -36,12 +36,12 @@ algo_series = {"degrees": deg_df}
 # output all edges or only nodes
 if params[Constants.OUTPUT_TYPE] == 'output_edges':
     # keep all rows in output
-    df_output = df
+    output_df = input_df
     node_columns = [Constants.SOURCE, Constants.TARGET]  # merge graph features with both source and target node columns
 else:
     # output one row per node
-    df_output = deg_df[Constants.NODE_NAME].to_frame()
-    df_output.columns = [params[Constants.SOURCE]]
+    output_df = deg_df[Constants.NODE_NAME].to_frame()
+    output_df.columns = [params[Constants.SOURCE]]
     node_columns = [Constants.SOURCE]
 
 # computing all selected graph features algorithms
@@ -62,20 +62,20 @@ for algo, algo_params in GRAPH_ALGORITHMS.items():
 if not params[Constants.DIRECTED]:
     start = time.time()
     logging.info("Graph analytics - Computing connected_components ...")
-    _cco = {}
-    for i, c in enumerate(nx.connected_components(graph)):
-        for e in c:
-            _cco[e] = i
-    cco = pd.Series(_cco, name='connected_component_id').reset_index()
-    cco.columns = [Constants.NODE_NAME, 'connected_component_id']
-    cco['connected_component_size'] = cco.groupby('connected_component_id')['connected_component_id'].transform('count')
-    algo_series["connected_component"] = cco
+    connected_components_dict = {}
+    for component_id, component in enumerate(nx.connected_components(graph)):
+        for element in component:
+            connected_components_dict[element] = component_id
+    connected_components = pd.Series(connected_components_dict, name='connected_component_id').reset_index()
+    connected_components.columns = [Constants.NODE_NAME, 'connected_component_id']
+    connected_components['connected_component_size'] = connected_components.groupby('connected_component_id')['connected_component_id'].transform('count')
+    algo_series["connected_component"] = connected_components
     logging.info("Graph analytics - connected_components computed in {:.4f} seconds".format(time.time()-start))
 
 # merge all series into one (merge both with source and target columns if output a dataset of edges)
 for series in algo_series.values():
     for node_col in node_columns:
-        df_output = df_output.merge(series, left_on=params[node_col], right_on=Constants.NODE_NAME, how='left',
+        output_df = output_df.merge(series, left_on=params[node_col], right_on=Constants.NODE_NAME, how='left',
                                     suffixes=('_source', '_target')).drop([Constants.NODE_NAME], axis=1)
 
-output_dataset.write_with_schema(df_output)
+output_dataset.write_with_schema(output_df)
