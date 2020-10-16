@@ -15,8 +15,8 @@ class Graph:
     """
 
     def __init__(self, graph_params):
-        self.source = graph_params.get('source', None)
-        self.target = graph_params.get('target', None)
+        self.source_column = graph_params.get('source', None)
+        self.target_column = graph_params.get('target', None)
         self.max_nodes = int(graph_params.get('max_nodes', None))
         self.source_nodes_color = graph_params.get('source_nodes_color', None)
         self.source_nodes_size = graph_params.get('source_nodes_size', None)
@@ -35,8 +35,8 @@ class Graph:
         start = time.time()
         source_nodes, target_nodes = set(), set()
         nodes_nb = 0
-        nodes = {}
-        edges = {}
+        self.nodes = {}
+        self.edges = {}
 
         self._check_data_type(df)
 
@@ -44,55 +44,66 @@ class Graph:
             if nodes_nb >= self.max_nodes:
                 break
 
-            src = row[self.source]
-            tgt = row[self.target]
-            if src not in source_nodes and src not in target_nodes:
-                nodes[src] = self._create_source_node(row)
-                source_nodes.add(src)
-                nodes_nb += 1
-            elif src not in source_nodes and src in target_nodes:
-                self._update_source_node(row, nodes[src])
-                source_nodes.add(src)
+            source = row[self.source_column]
+            target = row[self.target_column]
 
-            if tgt not in source_nodes and tgt not in target_nodes:
-                nodes[tgt] = self._create_target_node(row)
-                target_nodes.add(tgt)
-                nodes_nb += 1
-            elif tgt in source_nodes and tgt not in target_nodes:
-                self._update_target_node(row, nodes[tgt])
-                target_nodes.add(tgt)
+            nodes_nb += self._process_source(source, row, source_nodes, target_nodes)
+            nodes_nb += self._process_target(target, row, source_nodes, target_nodes)
 
             if not self.directed_edges:
                 try:
-                    if tgt < src:  # edges are sorted when directed
-                        src, tgt = tgt, src
+                    if target < source:  # edges are sorted when directed
+                        source, target = target, source
                 except Exception as e:
-                    logging.info("Exception when comparing source ({}) and target ({}) nodes: {}".format(src, tgt, e))
+                    logging.info("Exception when comparing source ({}) and target ({}) nodes: {}".format(source, target, e))
                     continue
-            if (src, tgt) not in edges:
-                edges[(src, tgt)] = self._create_edge(row, src, tgt)
-            elif not self.edges_width:  # here edge weight must be computed (cause width is weight by default)
-                self._update_edge(edges[(src, tgt)])
 
-        for node_id in nodes:
-            self._add_node_title(nodes[node_id])
-        for edge_id in edges:
-            self._add_edge_title(edges[edge_id])
+            self._process_edge(source, target, row)
+
+        for node_id in self.nodes:
+            self._add_node_title(self.nodes[node_id])
+        for edge_id in self.edges:
+            self._add_edge_title(self.edges[edge_id])
 
         self.groups = {}
         self.group_values = set()
-        for node_id in nodes:
-            self._add_group_value(nodes[node_id])
+        for node_id in self.nodes:
+            self._add_group_value(self.nodes[node_id])
         self._create_groups()
-
-        # compute layout
-        self.nodes = nodes
-        self.edges = edges
 
         logging.info("Graph object created in {:.4f} seconds".format(time.time()-start))
 
+    def _process_source(self, source, row, source_nodes, target_nodes):
+        """ add source node if not already seen and update it if it was seen as a target node """
+        if source not in source_nodes and source not in target_nodes:
+            self.nodes[source] = self._create_source_node(row)
+            source_nodes.add(source)
+            return 1
+        elif source not in source_nodes and source in target_nodes:
+            self._update_source_node(row, self.nodes[source])
+            source_nodes.add(source)
+        return 0
+
+    def _process_target(self, target, row, source_nodes, target_nodes):
+        """ add target node if not already seen and update it if it was seen as a source node """
+        if target not in source_nodes and target not in target_nodes:
+            self.nodes[target] = self._create_target_node(row)
+            target_nodes.add(target)
+            return 1
+        elif target in source_nodes and target not in target_nodes:
+            self._update_target_node(row, self.nodes[target])
+            target_nodes.add(target)
+        return 0
+
+    def _process_edge(self, source, target, row):
+        """ add edge node if not already seen and update the width if width is based on weight """
+        if (source, target) not in self.edges:
+            self.edges[(source, target)] = self._create_edge(row, source, target)
+        elif not self.edges_width:  # here edge weight must be computed (cause width is weight by default)
+            self._update_edge(self.edges[(source, target)])
+
     def _create_source_node(self, row):
-        node = {'id': row[self.source], 'label': row[self.source]}
+        node = {'id': row[self.source_column], 'label': row[self.source_column]}
         if self.source_nodes_color:
             node['group'] = row[self.source_nodes_color]
         if self.source_nodes_size and not np.isnan(row[self.source_nodes_size]):
@@ -100,15 +111,15 @@ class Graph:
         return node
 
     def _create_target_node(self, row):
-        node = {'id': row[self.target], 'label': row[self.target]}
+        node = {'id': row[self.target_column], 'label': row[self.target_column]}
         if self.target_nodes_color:
             node['group'] = row[self.target_nodes_color]
         if self.target_nodes_size and not np.isnan(row[self.target_nodes_size]):
             node['value'] = row[self.target_nodes_size]
         return node
 
-    def _create_edge(self, row, src, tgt):
-        edge = {'from': src, 'to': tgt}
+    def _create_edge(self, row, source, target):
+        edge = {'from': source, 'to': target}
         if self.edges_caption:
             edge['label'] = str(row[self.edges_caption])
         if self.edges_width:
@@ -165,12 +176,12 @@ class Graph:
         for edge in self.edges:
             edge_list += [(node_to_id[edge[0]], node_to_id[edge[1]])]
 
-        iGraph.add_vertices(i+1)
+        iGraph.add_vertices(len(self.nodes))
         iGraph.add_edges(edge_list)
 
         return iGraph, id_to_node
 
-    def _contract_nodes(self, positions, translation_factor=0.95, std_nb=2):
+    def _contract_nodes(self, positions, translation_factor=0.9, std_nb=2):
         """
         contract nodes by removing empty zones between them, nodes that are 'too' far from others
         are translated toward their neighbors
@@ -181,32 +192,33 @@ class Graph:
         the average distance between nodes + 'std_nb' standard-deviation
         """
         columns = ['x', 'y']
-        df = pd.DataFrame(positions, columns=columns)
-        df['id'] = df.index
+        positions_df = pd.DataFrame(positions, columns=columns)
+        positions_df['id'] = positions_df.index
 
         for col in columns:
-            df = df.sort_values(by=[col])
-            df['{}_diff'.format(col)] = df[col] - df[col].shift(1)
-            df = df.sort_values(by=['{}_diff'.format(col)], ascending=False).reset_index(drop=True)
+            positions_df = positions_df.sort_values(by=[col])
+            consecutive_difference_column = '{}_diff'.format(col)
+            positions_df[consecutive_difference_column] = positions_df[col] - positions_df[col].shift(1)
+            positions_df = positions_df.sort_values(by=[consecutive_difference_column], ascending=False).reset_index(drop=True)
 
-            outliers_bound = df['{}_diff'.format(col)].mean() + std_nb * df['{}_diff'.format(col)].std()
+            outliers_bound = positions_df[consecutive_difference_column].mean() + std_nb * positions_df[consecutive_difference_column].std()
 
             i = 0
-            threshold = df.loc[i, col]
-            diff = df.loc[i, '{}_diff'.format(col)]
+            threshold = positions_df.loc[i, col]
+            diff = positions_df.loc[i, consecutive_difference_column]
             while diff > outliers_bound:
-                mask = (df[col] >= threshold)
-                df_valid = df[mask]
-                df.loc[mask, col] = df_valid[col] - diff * translation_factor
+                mask = (positions_df[col] >= threshold)
+                masked_df = positions_df[mask]
+                positions_df.loc[mask, col] = masked_df[col] - diff * translation_factor
 
                 i += 1
-                threshold = df.loc[i, col]
-                diff = df.loc[i, '{}_diff'.format(col)]
+                threshold = positions_df.loc[i, col]
+                diff = positions_df.loc[i, consecutive_difference_column]
 
             logging.info("{} translations done in axis {}".format(i, col))
 
-        df = df.sort_values(by=['id'], ascending=True).reset_index(drop=True)
-        return df[columns].values
+        positions_df = positions_df.sort_values(by=['id'], ascending=True).reset_index(drop=True)
+        return positions_df[columns].values
 
     def _rescale_positions(self, positions, scale):
         """ return a numpy array of scaled positions between -scale and +scale """
@@ -237,7 +249,7 @@ class Graph:
 
         positions = np.array(iGraph.layout_fruchterman_reingold(grid=False))
 
-        if len(positions) > 200:
+        if len(positions) > 500:
             positions = self._contract_nodes(positions)
 
         positions = self._transform_positions(positions, scale, scale_ratio)
