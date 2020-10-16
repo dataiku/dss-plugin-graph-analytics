@@ -236,7 +236,6 @@ class Graph:
         iGraph, id_to_node = self._create_igraph()
 
         positions = np.array(iGraph.layout_fruchterman_reingold(grid=False))
-        # positions = np.array(iGraph.layout_lgl())
 
         if len(positions) > 200:
             positions = self._contract_nodes(positions)

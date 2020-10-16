@@ -9,7 +9,7 @@ var highlightActive = false;
 var nodesDataset;
 var edgesDataset;
 
-var globalThreadNum = 0;
+var globalCallbackNum = 0;
 
 function sleep (time) {
     return new Promise((resolve) => setTimeout(resolve, time));
@@ -89,12 +89,12 @@ window.addEventListener('message', function(event) {
         var chart_width = document.body.getBoundingClientRect().width;
         var scale_ratio = Math.max(Math.min(chart_width/chart_height, 2), 0.5)
 
-        globalThreadNum += 1;
-        var thisThreadNum = globalThreadNum;
-        console.log(`waiting for new threads before calling backend`);
-        sleep(800).then(() => {  // waiting before calling backend that no new thread was called during a small time interval 
-            if (thisThreadNum < globalThreadNum) {  // another thread incremented globalThreadNum during the time interval
-                console.log(`backend not called - overridden by new thread`);
+        globalCallbackNum += 1;
+        var thisCallbackNum = globalCallbackNum;
+        console.log(`waiting for new callback before calling backend`);
+        sleep(800).then(() => {  // waiting before calling backend that no new callback was called during a small time interval 
+            if (thisCallbackNum < globalCallbackNum) {  // another callback incremented globalThreadNum during the time interval
+                console.log(`backend not called - overridden by new callback`);
                 return;
             } else {        
                 console.log(`calling backend`);
