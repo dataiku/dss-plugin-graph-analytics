@@ -1,7 +1,7 @@
 {
     "meta" : {
         "label" : "Graph features",
-        "description": "This recipe uses the python NetworkX library to compute graph features for each node from a dataset of relations.",
+        "description": "This recipe uses the python NetworkX library to compute graph features for each node from a dataset of relations",
         "icon": "icon-cogs",
         "displayOrderRank": 2
     },
@@ -13,7 +13,7 @@
         {
             "name": "Input Dataset",
             "label": "Input Dataset",
-            "description": "Rows of the input dataset must have a Source and a Target column.",
+            "description": "Rows of the input dataset must have a Source and a Target column",
             "arity": "UNARY",
             "required": true,
             "acceptsDataset": true

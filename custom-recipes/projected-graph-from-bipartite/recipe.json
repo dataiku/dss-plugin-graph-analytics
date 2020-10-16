@@ -1,7 +1,7 @@
 {
   "meta" : {
     "label" : "Projected graph",
-    "description": "Create a projected graph from a bipartite graph. For instance, if you have a dataset of Customers - Products pairs (bipartite graph), and you use this recipe to 'Create a graph of' Products 'Linked by' Customers, then you will get the projected Products graph: a dataset of Products_1 - Products_2 pairs.",
+    "description": "Create a projected graph from a bipartite graph. For instance, if you have a dataset of Customers - Products pairs (bipartite graph), and you use this recipe to 'Create a graph of' Products 'Linked by' Customers, then you will get the projected Products graph: a dataset of Products_1 - Products_2 pairs",
     "icon": "icon-link",
     "displayOrderRank": 3
   },

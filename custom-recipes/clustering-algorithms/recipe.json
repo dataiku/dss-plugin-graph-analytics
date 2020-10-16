@@ -1,7 +1,7 @@
 {
     "meta" : {
         "label" : "Graph clustering",
-        "description": "This recipe uses the python igraph library to compute clustering algorithms from a dataset of relations. It works better when the graph is connected (one connected component).",
+        "description": "This recipe uses the python igraph library to compute clustering algorithms from a dataset of relations. It works better when the graph is connected (one connected component)",
         "icon": "icon-sitemap",
         "displayOrderRank": 1
     },
@@ -13,7 +13,7 @@
         {
             "name": "input_dataset",
             "label": "Input Dataset",
-            "description": "Rows of the input dataset must have a Source and a Target column.",
+            "description": "Rows of the input dataset must have a Source and a Target column",
             "arity": "UNARY",
             "required": true,
             "acceptsDataset": true
