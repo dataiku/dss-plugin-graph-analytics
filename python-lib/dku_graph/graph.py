@@ -238,17 +238,25 @@ class Graph:
     def compute_layout(self, scale, scale_ratio):
         """
         create an iGraph object from the Graph class,
-        compute nodes positions using the Fruchterman-Reingold layout algorithm of iGraph,
+        compute nodes positions using the Fruchterman-Reingold layout algorithm
+        initialised with the positions computed by the Kamada-Kawai layout algorithm,
         tranform and rescale the positions to improve the layout,
         update the nodes properties with the positions
         """
         logging.info("Computing layout ...")
-        start = time.time()
+        start_time = time.time()
 
         iGraph, id_to_node = self._create_igraph()
 
-        positions = np.array(iGraph.layout_fruchterman_reingold(grid=False))
+        kamada_start = time.time()
+        kamada_positions = iGraph.layout_kamada_kawai()
+        fruchterman_start = time.time()
+        logging.info("Kamada-Kawai layout computed in {:.4f} seconds".format(fruchterman_start-kamada_start))
+        fruchterman_positions = iGraph.layout_fruchterman_reingold(seed=kamada_positions, grid=False, niter=300)
+        logging.info("Fruchterman-Reingold layout computed in {:.4f} seconds".format(time.time()-fruchterman_start))
 
+        positions = np.array(fruchterman_positions)
+        
         if len(positions) > 500:
             positions = self._contract_nodes(positions)
 
@@ -257,7 +265,7 @@ class Graph:
         for i, pos in enumerate(positions):
             self.nodes[id_to_node[i]].update({'x': pos[0], 'y': pos[1]})
 
-        logging.info("Layout computed in {:.4f} seconds for {} nodes".format(time.time()-start, len(positions)))
+        logging.info("Global layout computed in {:.4f} seconds for {} nodes".format(time.time()-start_time, len(positions)))
 
     def _check_data_type(self, df):
         for col in [self.source_nodes_size, self.target_nodes_size, self.edges_width]:
