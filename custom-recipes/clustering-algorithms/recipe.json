@@ -77,7 +77,7 @@
                     {"value": "output_nodes","label": "Dataset of nodes"}, 
                     {"value": "output_edges","label": "Dataset of edges"}
             ],
-            "defaultValue": "output_nodes"
+            "defaultValue": "output_edges"
         },
         {
             "type": "SEPARATOR",
