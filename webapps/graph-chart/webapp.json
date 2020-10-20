@@ -19,7 +19,7 @@
                 "description": "+/- one node",
                 "mandatory": true,
                 "minI":1,
-                "maxI":5000,
+                "maxI":3000,
                 "defaultValue": 50
             },
             {
