@@ -47,12 +47,12 @@ if params[Constants.WEIGHTED]:
     projected_graph = bipartite.weighted_projected_graph(bipartite_graph, deduplicated_df[params[Constants.GRAPH_OF]].unique())
     edges_list = [(src, tgt, w['weight']) for src, tgt, w in projected_graph.edges(data=True)]
     output_df = pd.DataFrame(list(edges_list))
-    output_df.columns = [params[Constants.GRAPH_OF] + '_source', params[Constants.GRAPH_OF] + '_target', 'weight']
+    output_df.columns = [params[Constants.GRAPH_OF] + '_1', params[Constants.GRAPH_OF] + '_2', 'weight']
 else:
     projected_graph = bipartite.projected_graph(bipartite_graph, deduplicated_df[params[Constants.GRAPH_OF]].unique(), multigraph=False)
     # Outputting the corresponding data frame
     output_df = pd.DataFrame(list(projected_graph.edges()))
-    output_df.columns = [params[Constants.GRAPH_OF] + '_source', params[Constants.GRAPH_OF] + '_target']
+    output_df.columns = [params[Constants.GRAPH_OF] + '_1', params[Constants.GRAPH_OF] + '_2']
 
 logging.info("Projected graph - Projected graph computed in {:.4f} seconds".format(time.time()-start))
 
