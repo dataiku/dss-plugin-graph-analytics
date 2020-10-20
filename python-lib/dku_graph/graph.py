@@ -66,10 +66,11 @@ class Graph:
             self._add_edge_title(self.edges[edge_id])
 
         self.groups = {}
-        self.group_values = set()
-        for node_id in self.nodes:
-            self._add_group_value(self.nodes[node_id])
-        self._create_groups()
+        if self.source_nodes_color or self.target_nodes_color:
+            self.group_values = set()
+            for node_id in self.nodes:
+                self._add_group_value(self.nodes[node_id])
+            self._create_groups()
 
         logging.info("Graph object created in {:.4f} seconds".format(time.time()-start))
 
@@ -181,7 +182,7 @@ class Graph:
 
         return iGraph, id_to_node
 
-    def _contract_nodes(self, positions, translation_factor=0.9, std_nb=2):
+    def _contract_nodes(self, positions, translation_factor=0.8, std_nb=2):
         """
         contract nodes by removing empty zones between them, nodes that are 'too' far from others
         are translated toward their neighbors
@@ -235,11 +236,25 @@ class Graph:
 
         return positions
 
+    def _igraph_layout_algorithms(self, iGraph, kamada_iter=5000, fruchterman_iter=300):
+        """ 
+        compute nodes positions of an iGraph object,
+        first generate a fast inital layout using the Kamada-Kawai algorithm,
+        then use the slower Fruchterman-Reingold algorithm to improve the layout,
+        return the positions as a numpy array
+        """
+        kamada_start = time.time()
+        kamada_positions = iGraph.layout_kamada_kawai(maxiter=kamada_iter)
+        fruchterman_start = time.time()
+        logging.info("Kamada-Kawai layout computed in {:.4f} seconds".format(fruchterman_start-kamada_start))
+        fruchterman_positions = iGraph.layout_fruchterman_reingold(seed=kamada_positions, grid=False, niter=fruchterman_iter)
+        logging.info("Fruchterman-Reingold layout computed in {:.4f} seconds".format(time.time()-fruchterman_start))
+        return np.array(fruchterman_positions)
+
     def compute_layout(self, scale, scale_ratio):
         """
         create an iGraph object from the Graph class,
-        compute nodes positions using the Fruchterman-Reingold layout algorithm
-        initialised with the positions computed by the Kamada-Kawai layout algorithm,
+        compute nodes positions using igraph layout algorithms
         tranform and rescale the positions to improve the layout,
         update the nodes properties with the positions
         """
@@ -248,15 +263,8 @@ class Graph:
 
         iGraph, id_to_node = self._create_igraph()
 
-        kamada_start = time.time()
-        kamada_positions = iGraph.layout_kamada_kawai()
-        fruchterman_start = time.time()
-        logging.info("Kamada-Kawai layout computed in {:.4f} seconds".format(fruchterman_start-kamada_start))
-        fruchterman_positions = iGraph.layout_fruchterman_reingold(seed=kamada_positions, grid=False, niter=300)
-        logging.info("Fruchterman-Reingold layout computed in {:.4f} seconds".format(time.time()-fruchterman_start))
+        positions = self._igraph_layout_algorithms(iGraph)
 
-        positions = np.array(fruchterman_positions)
-        
         if len(positions) > 500:
             positions = self._contract_nodes(positions)
 
@@ -289,12 +297,13 @@ class Graph:
         map a color to each group
         for numerical column as color column, compute a range of color from white to red depending on the value
         """
-        self.groups["nogroup"] = {'color': "rgba(0, 125, 255, 1)"}
+        self.groups["nogroup"] = {'color': "#85bcf8"}
         if self.numerical_colors:
-            mini, maxi = min(self.group_values), max(self.group_values)
-            for group in self.group_values:
-                x = (maxi - group)/(maxi - mini) * 225  # would be white if 255
-                self.groups[group] = {'color': "rgba(255, {0}, {0}, 1)".format(x)}
+            if len(self.group_values) > 0:
+                mini, maxi = min(self.group_values), max(self.group_values)
+                for group in self.group_values:
+                    x = (maxi - group)/(maxi - mini) * 225  # would be white if 255
+                    self.groups[group] = {'color': "rgba(255, {0}, {0}, 1)".format(x)}
         else:
             colors = EXISTING_COLORS[:]
             for group in self.group_values:
