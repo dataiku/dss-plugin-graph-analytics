@@ -1,7 +1,7 @@
 let webAppDesc = dataiku.getWebAppDesc()['chart']
-var webAppConfig;
-var filters;
-var config;
+var webAppConfig = {};
+var filters = {};
+var config = {};
 
 var network;
 var allNodes;
@@ -10,6 +10,7 @@ var nodesDataset;
 var edgesDataset;
 
 var globalCallbackNum = 0;
+var waitingTime;
 
 function sleep (time) {
     return new Promise((resolve) => setTimeout(resolve, time));
@@ -34,9 +35,8 @@ window.addEventListener('message', function(event) {
         var same_webappconfig = isEqual(webAppConfig, event_data['webAppConfig'])
 
         if (same_webappconfig && same_filters) {
+            // some events such as resizing the window should not do anything
             return;
-        } else if (same_webappconfig) {
-            filters = event_data['filters']
         } else {
             webAppConfig = event_data['webAppConfig']
             filters = event_data['filters']
@@ -76,7 +76,14 @@ window.addEventListener('message', function(event) {
             }
 
             if (isEqual(new_config, config) && same_filters) {
+                // selecting 'Show advanced options' should not do anything if no advanced parameters are selected
                 return;
+            }
+            // waiting for a potential new callback is only neccesary for INT type parameters (too responsive otherwise)
+            if (new_config['max_nodes'] != config['max_nodes']) {
+                waitingTime = 800
+            } else {
+                waitingTime = 0
             }
             config = new_config
         }
@@ -92,8 +99,8 @@ window.addEventListener('message', function(event) {
         globalCallbackNum += 1;
         var thisCallbackNum = globalCallbackNum;
         console.log(`waiting for new callback before calling backend`);
-        sleep(800).then(() => {  // waiting before calling backend that no new callback was called during a small time interval 
-            if (thisCallbackNum < globalCallbackNum) {  // another callback incremented globalThreadNum during the time interval
+        sleep(waitingTime).then(() => {  // waiting before calling backend that no new callback was called during a small time interval 
+            if (thisCallbackNum != globalCallbackNum) {  // another callback incremented globalThreadNum during the time interval
                 console.log(`backend not called - overridden by new callback`);
                 return;
             } else {        
