@@ -17,7 +17,7 @@ def get_graph_data():
 
         dataset_name = config.get('dataset_name')
 
-        df = dataiku.Dataset(dataset_name).get_dataframe(limit=500000)
+        df = dataiku.Dataset(dataset_name).get_dataframe(limit=100000)
         if df.empty:
             raise Exception("Dataframe is empty")
 
