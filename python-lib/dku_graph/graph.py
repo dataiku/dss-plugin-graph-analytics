@@ -50,14 +50,6 @@ class Graph:
             nodes_nb += self._process_source(source, row, source_nodes, target_nodes)
             nodes_nb += self._process_target(target, row, source_nodes, target_nodes)
 
-            if not self.directed_edges:
-                try:
-                    if target < source:  # edges are sorted when directed
-                        source, target = target, source
-                except Exception as e:
-                    logging.info("Exception when comparing source ({}) and target ({}) nodes: {}".format(source, target, e))
-                    continue
-
             self._process_edge(source, target, row)
 
         for node_id in self.nodes:
@@ -76,6 +68,8 @@ class Graph:
 
     def _process_source(self, source, row, source_nodes, target_nodes):
         """ add source node if not already seen and update it if it was seen as a target node """
+        if self._null_node(source):
+            return 0
         if source not in source_nodes and source not in target_nodes:
             self.nodes[source] = self._create_source_node(row)
             source_nodes.add(source)
@@ -87,6 +81,8 @@ class Graph:
 
     def _process_target(self, target, row, source_nodes, target_nodes):
         """ add target node if not already seen and update it if it was seen as a source node """
+        if self._null_node(target):
+            return 0
         if target not in source_nodes and target not in target_nodes:
             self.nodes[target] = self._create_target_node(row)
             target_nodes.add(target)
@@ -98,6 +94,15 @@ class Graph:
 
     def _process_edge(self, source, target, row):
         """ add edge node if not already seen and update the width if width is based on weight """
+        if self._null_node(source) or self._null_node(target):
+            return
+        if not self.directed_edges:
+            try:
+                if target < source:  # edges are sorted when directed
+                    source, target = target, source
+            except Exception as e:
+                logging.info("Exception when comparing source ({}) and target ({}) nodes: {}".format(source, target, e))
+                return
         if (source, target) not in self.edges:
             self.edges[(source, target)] = self._create_edge(row, source, target)
         elif not self.edges_width:  # here edge weight must be computed (cause width is weight by default)
@@ -166,6 +171,11 @@ class Graph:
             title += "<br>width: {}".format(edge_params['value'])
         edge_params['title'] = title
 
+    def _null_node(self, node):
+        if isinstance(node, float):
+            return np.isnan(node)
+        return False
+
     def _create_igraph(self):
         iGraph = igraph.Graph()
         node_to_id = {}
@@ -182,7 +192,7 @@ class Graph:
 
         return iGraph, id_to_node
 
-    def _contract_nodes(self, positions, translation_factor=0.8, std_nb=2):
+    def _contract_nodes(self, positions, translation_factor=0.8, std_nb=3):
         """
         contract nodes by removing empty zones between them, nodes that are 'too' far from others
         are translated toward their neighbors
