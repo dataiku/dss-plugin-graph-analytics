@@ -123,7 +123,7 @@ window.addEventListener('message', function(event) {
                                         max: 50                            
                                     },
                                     font: {
-                                        size: 12,
+                                        size: 20,
                                         face: "Tahoma",
                                         strokeWidth: 7
                                     }
