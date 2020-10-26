@@ -1,103 +1,81 @@
-# -*- coding: utf-8 -*-
-import dataiku
-from dataiku.customrecipe import *
-
+from dataiku.customrecipe import get_recipe_config
+from utils import get_input_dataset, get_output_dataset, get_analytics_recipe_params, AlgorithmError
+from constants import Constants
+from dku_graph_analytics.graph_analytics import GRAPH_ALGORITHMS
+import logging
+import time
 import pandas as pd
 import networkx as nx
-from networkx.algorithms import bipartite
 
 
-# Read recipe config
-input_name = get_input_names_for_role('Input Dataset')[0]
-output_name = get_output_names_for_role('Output Dataset')[0]
+input_dataset = get_input_dataset('Input Dataset')
+output_dataset = get_output_dataset('Output Dataset')
 
-needs_eig = get_recipe_config()['eigenvector_centrality']
-needs_clu = get_recipe_config()['clustering']
-needs_tri = get_recipe_config()['triangles']
-needs_clo = get_recipe_config()['closeness']
-needs_pag = get_recipe_config()['pagerank']
-needs_squ = get_recipe_config()['sq_clustering']
+recipe_config = get_recipe_config()
+params = get_analytics_recipe_params(recipe_config)
 
-node_A=get_recipe_config()['node_A']
-node_B=get_recipe_config()['node_B']
+input_df = input_dataset.get_dataframe()
 
-print get_recipe_config()
-
-# Recipe input
-df = dataiku.Dataset(input_name).get_dataframe()
-print "[+] Dataset loaded..."
-
-# Creating the bipartite graph
-graph = nx.Graph()
-graph.add_edges_from(zip(df[node_A].values.tolist(),df[node_B].values.tolist()))
-print "[+] Created bipartite graph..."
+start = time.time()
+logging.info("Graph analytics - Creating NetworkX graph ...")
+if params[Constants.DIRECTED]:
+    graph = nx.from_pandas_edgelist(input_df, source=params[Constants.SOURCE], target=params[Constants.TARGET], create_using=nx.DiGraph)
+else:
+    graph = nx.from_pandas_edgelist(input_df, source=params[Constants.SOURCE], target=params[Constants.TARGET], create_using=nx.Graph)
+logging.info("Graph analytics - NetworkX graph created in {:.4f} seconds".format(time.time()-start))
 
 # Always run: nodes degree
-print "[+] Computing degree..."
+start = time.time()
+logging.info("Graph analytics - Computing degree ...")
 deg = pd.Series(nx.degree(graph), name='degree')
-stats = pd.DataFrame(list(deg),columns=['node_name','degree'])
+deg_df = pd.DataFrame(list(deg), columns=[Constants.NODE_NAME, 'degree'])
+logging.info("Graph analytics - degree computed in {:.4f} seconds".format(time.time()-start))
 
-if needs_eig:
-    print "[+] Computing eigenvector centrality..."
-    eig = pd.Series(nx.eigenvector_centrality_numpy(graph), name='eigenvector_centrality').reset_index()
-    eig.columns=['node_name','eigenvector_centrality']
+algo_series = {"degrees": deg_df}
 
-if needs_clu:
-    print "[+] Computing clustering coefficient..."
-    clu = pd.Series(nx.clustering(graph), name='clustering_coefficient').reset_index()
-    clu.columns=['node_name','clustering_coefficient']
+# output all edges or only nodes
+if params[Constants.OUTPUT_TYPE] == 'output_edges':
+    # keep all rows in output
+    output_df = input_df
+    node_columns = [Constants.SOURCE, Constants.TARGET]  # merge graph features with both source and target node columns
+else:
+    # output one row per node
+    output_df = deg_df[Constants.NODE_NAME].to_frame()
+    output_df.columns = [params[Constants.SOURCE]]
+    node_columns = [Constants.SOURCE]
 
-if needs_tri:
-    print "[+] Computing number of triangles..."
-    tri = pd.Series(nx.triangles(graph), name='triangles').reset_index()
-    tri.columns=['node_name','triangles']
+# computing all selected graph features algorithms
+for algo, algo_params in GRAPH_ALGORITHMS.items():
+    label, method = algo_params['label'], algo_params['method']
+    if params[algo]:
+        if not params.get(algo_params.get('param_restriction', None), None):
+            start = time.time()
+            logging.info("Graph analytics - Computing {} ...".format(label))
+            try:
+                pd_series = pd.Series(method[0](graph, **method[1]), name=label).reset_index()
+                pd_series.columns = [Constants.NODE_NAME, label]
+                algo_series[label] = pd_series
+                logging.info("Graph analytics - {} computed in {:.4f} seconds".format(label, time.time()-start))
+            except Exception as e:
+                raise AlgorithmError("Error while computing {}: {}".format(label, e))
 
-if needs_clo:
-    print "[+] Computing closeness centrality..."
-    clo = pd.Series(nx.closeness_centrality(graph), name='closeness_centrality').reset_index()
-    clo.columns=['node_name','closeness_centrality']
+if not params[Constants.DIRECTED]:
+    start = time.time()
+    logging.info("Graph analytics - Computing connected_components ...")
+    connected_components_dict = {}
+    for component_id, component in enumerate(nx.connected_components(graph)):
+        for element in component:
+            connected_components_dict[element] = component_id
+    connected_components = pd.Series(connected_components_dict, name='connected_component_id').reset_index()
+    connected_components.columns = [Constants.NODE_NAME, 'connected_component_id']
+    connected_components['connected_component_size'] = connected_components.groupby('connected_component_id')['connected_component_id'].transform('count')
+    algo_series["connected_component"] = connected_components
+    logging.info("Graph analytics - connected_components computed in {:.4f} seconds".format(time.time()-start))
 
-if needs_pag:
-    print "[+] Computing pagerank..."
-    pag = pd.Series(nx.pagerank(graph), name='pagerank').reset_index()
-    pag.columns=['node_name','pagerank']
+# merge all series into one (merge both with source and target columns if output a dataset of edges)
+for series in algo_series.values():
+    for node_col in node_columns:
+        output_df = output_df.merge(series, left_on=params[node_col], right_on=Constants.NODE_NAME, how='left',
+                                    suffixes=('_source', '_target')).drop([Constants.NODE_NAME], axis=1)
 
-if needs_squ:
-    print "[+] Computing square clustering..."
-    squ = pd.Series(nx.square_clustering(graph), name='square_clustering_coefficient').reset_index()
-    squ.columns=['node_name','square_clustering_coefficient']
-
-# Always run: connected components
-_cco = {}
-for i, c in enumerate(nx.connected_components(graph)):
-    for e in c:
-        _cco[e] = i
-cco = pd.Series(_cco, name='connected_component_id').reset_index()
-cco.columns=['node_name','connected_component_id']
-
-# Putting all together
-
-
-stats = stats.merge(cco,how='left')
-if needs_eig:
-    stats = stats.merge(eig,how='left')
-if needs_clu:
-    stats = stats.merge(clu,how='left')
-if needs_tri:
-    stats = stats.merge(tri,how='left')
-if needs_clo:
-    stats = stats.merge(clo,how='left')
-if needs_pag:
-    stats = stats.merge(pag,how='left')
-if needs_squ:
-    stats = stats.merge(squ,how='left')
-
-
-_s = stats["connected_component_id"].value_counts().reset_index()
-_s.columns = ['connected_component_id', 'connected_component_size']
-stats = stats.merge(_s, on="connected_component_id", how="left")
-
-# Recipe outputs
-print "[+] Writing output dataset..."
-graph = dataiku.Dataset(output_name)
-graph.write_with_schema(stats)
+output_dataset.write_with_schema(output_df)

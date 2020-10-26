@@ -1,45 +1,23 @@
 # Dataiku Graph Analytics Plugin
 
-Current Version: 0.0.2
+Version: 1.0.1
 
 ## Overview
 
-This plugin offers two recipes to handle two kinds of graphs:
+This plugin offers three recipes and one custom chart to create graphs and compute graph algorithms:
 
-* Edges list (graph specified as a list of source_node / target_node couples)
-* Bipartite graph (two kinds of items like product and transaction, transactions linking products together)
 
-It can transform bipartite graphs into edge lists and extract node statistics from edge lists.
+* **Projected graph**: for example, create a graph of Product (dataset of Product pairs) from a dataset of Product - Customer pairs where 2 products are linked if they share a same customer.
+* **Graph features**: from a dataset of edges (Source - Target pairs), compute some graph algorithms to get node features such as degree, closeness centrality, pagerank, ... . It can output either a dataset of edges with the new source and target graph features in each row, or output a dataset of nodes and their corresponding new graph features.
+* **Graph clustering**: from a dataset of edges, compute some graph clustering algorithms and assign nodes to their cluster Id. Same as the Graph features recipe, it can output a dataset of edges or nodes with their newly computed clusters Id.
 
-This plugin also provides a template webapp to visualize your graph and perform a community detection.
+This plugin also provides a custom chart to visualize your graph:
+* You can specify the maximum number of nodes you want to display in the chart.
+* You can filter nodes based on some column conditions.
+* You can select some columns:
+    * to color nodes (nodes with same column value will have the same color)
+    * for node sizes (node sizes will depend on the column value)
+    * for edge widths and label
+* When double-clicking on a node, itself and its first-degree neighbor will be highligthed.
 
-## Installation
 
-This plugin must be installed following the [standard procedure](https://doc.dataiku.com/dss/latest/plugins/offline_install.html)
-
-WARNING! If you want to use the webapp template provided, you have to create a [python code env](https://doc.dataiku.com/dss/latest/code-envs/operations-python.html) containing the following packages:
-
-* networkx
-* python-louvain
-* flask
-* matplotlib
-* scipy
-
-Once it's done, you can create your webapp with the provided template, activate the python backend, and chose the created code env.
-
-## Usage
-
-### Compute statistics from list of edges
-
-This recipe takes the list of edges as input, and compute several graph statistics. Beware that some of the possible statistics can be quite long to compute depending of the size of the graph.
-
-### Create a projected graph from a bipartite graph
-
-This recipe transforms a bipartite graph (for exemple a list of transactions User - Product) into a list of edges for the projected graph (for exemple the graph of Products).
-Be aware that his recipe can be memory expensive.
-
-### Grap visualization webapp
-
-This webapp gives you tha ability to visualize a graph and perform a community detection. You have to provide the input dataset, the columns corresponding to the source node and the target node, and th column corresponding to the intensity of the interaction (it can be constant to 1).
-Then, the similarity parameter will give you the ability to take only edges with this minimum number of interactions.
-The color of the resulting nodes correspond to the different communities.
