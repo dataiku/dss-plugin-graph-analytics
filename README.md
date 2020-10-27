@@ -1,6 +1,7 @@
 # Dataiku Graph Analytics Plugin
 
-Version: 1.0.1
+Version: 1.0.0
+Compatible with DSS version: 8.0.2 and higher
 
 ## Overview
 
@@ -19,5 +20,3 @@ This plugin also provides a custom chart to visualize your graph:
     * for node sizes (node sizes will depend on the column value)
     * for edge widths and label
 * When double-clicking on a node, itself and its first-degree neighbor will be highligthed.
-
-
