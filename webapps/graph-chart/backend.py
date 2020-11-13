@@ -8,6 +8,12 @@ from dku_filtering.filtering import filter_dataframe
 from dku_graph.graph import Graph
 
 
+def convert_numpy_int64_to_int(o):
+    if isinstance(o, np.int64):
+        return int(o)
+    raise TypeError
+
+
 @app.route('/get_graph_data')
 def get_graph_data():
     try:
@@ -32,7 +38,7 @@ def get_graph_data():
 
         nodes, edges = list(graph.nodes.values()), list(graph.edges.values())
 
-        return json.dumps({'nodes': nodes, 'edges': edges, 'groups': graph.groups}, ignore_nan=True)
+        return json.dumps({'nodes': nodes, 'edges': edges, 'groups': graph.groups}, ignore_nan=True, default=convert_numpy_int64_to_int)
 
     except Exception as e:
         logging.error(traceback.format_exc())

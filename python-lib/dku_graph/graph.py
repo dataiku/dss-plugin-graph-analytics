@@ -109,7 +109,7 @@ class Graph:
             self._update_edge(self.edges[(source, target)])
 
     def _create_source_node(self, row):
-        node = {'id': row[self.source_column], 'label': row[self.source_column]}
+        node = {'id': row[self.source_column], 'label': str(row[self.source_column])}
         if self.source_nodes_color:
             node['group'] = row[self.source_nodes_color]
         if self.source_nodes_size and not np.isnan(row[self.source_nodes_size]):
@@ -117,7 +117,7 @@ class Graph:
         return node
 
     def _create_target_node(self, row):
-        node = {'id': row[self.target_column], 'label': row[self.target_column]}
+        node = {'id': row[self.target_column], 'label': str(row[self.target_column])}
         if self.target_nodes_color:
             node['group'] = row[self.target_nodes_color]
         if self.target_nodes_size and not np.isnan(row[self.target_nodes_size]):

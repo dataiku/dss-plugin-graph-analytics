@@ -1,7 +1,7 @@
 let webAppDesc = dataiku.getWebAppDesc()['chart']
 var webAppConfig = {};
 var filters = {};
-var config = {};
+var plugin_config = {};
 
 var network;
 var allNodes;
@@ -45,6 +45,8 @@ window.addEventListener('message', function(event) {
             try {
                 checkWebAppParameters(webAppConfig, webAppDesc);
             } catch (e) {
+                plugin_config = {}
+                document.getElementById("graph-stats").innerHTML = ""
                 dataiku.webappMessages.displayFatalError(e.message);
                 return;
             }
@@ -52,11 +54,13 @@ window.addEventListener('message', function(event) {
             try {
                 checkWebAppConfig(webAppConfig)
             } catch (e) {
+                plugin_config = {}
+                document.getElementById("graph-stats").innerHTML = ""
                 dataiku.webappMessages.displayFatalError(e.message);
                 return;
             }
         
-            var new_config = {
+            var new_plugin_config = {
                 dataset_name: webAppConfig['dataset'],
                 source: webAppConfig['source'],
                 target: webAppConfig['target'],
@@ -70,22 +74,22 @@ window.addEventListener('message', function(event) {
                 ]
                 for (var i = 0; i < advanced_properties.length; i++) {
                     if (webAppConfig[advanced_properties[i]]) {
-                        new_config[advanced_properties[i]] = webAppConfig[advanced_properties[i]]
+                        new_plugin_config[advanced_properties[i]] = webAppConfig[advanced_properties[i]]
                     }
                 }
             }
 
-            if (isEqual(new_config, config) && same_filters) {
+            if (isEqual(new_plugin_config, plugin_config) && same_filters) {
                 // selecting 'Show advanced options' should not do anything if no advanced parameters are selected
                 return;
             }
             // waiting for a potential new callback is only neccesary for INT type parameters (too responsive otherwise)
-            if (new_config['max_nodes'] != config['max_nodes']) {
+            if (new_plugin_config['max_nodes'] != plugin_config['max_nodes']) {
                 waitingTime = 800
             } else {
                 waitingTime = 0
             }
-            config = new_config
+            plugin_config = new_plugin_config
         }
 
         document.getElementById("graph-chart").innerHTML = ""
@@ -105,7 +109,7 @@ window.addEventListener('message', function(event) {
                 return;
             } else {        
                 console.log(`calling backend`);
-                dataiku.webappBackend.get('get_graph_data', {"config": JSON.stringify(config), "filters": JSON.stringify(filters), "scale_ratio": scale_ratio})
+                dataiku.webappBackend.get('get_graph_data', {"config": JSON.stringify(plugin_config), "filters": JSON.stringify(filters), "scale_ratio": scale_ratio})
                     .then(
                         function(data){
                             console.log(`backend done`);
@@ -142,7 +146,7 @@ window.addEventListener('message', function(event) {
                                         type: "continuous"
                                     },
                                     arrows: {
-                                        to: {enabled: config.directed_edges}
+                                        to: {enabled: plugin_config.directed_edges}
                                     },
                                 },
                                 interaction: {
