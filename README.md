@@ -1,6 +1,6 @@
 # Dataiku Graph Analytics Plugin
 
-Version: 1.0.0<br>
+Version: 1.0.1<br>
 Compatible with DSS version: 8.0.2 and higher<br>
 
 ## Overview
