@@ -1,9 +1,9 @@
 {
     "id": "graph-analytics",
-    "version": "1.0.1",
+    "version": "1.0.2",
     "meta": {
         "label": "Graph analytics",
-        "description": "",
+        "description": "Compute graphs features, find clusters and visualize them",
         "author": "Dataiku",
         "icon": "icon-link",
         "licenseInfo": "Apache Software License",
