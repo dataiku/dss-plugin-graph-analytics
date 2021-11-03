@@ -1,6 +1,6 @@
 {
     "id": "graph-analytics",
-    "version": "1.0.2",
+    "version": "1.0.3",
     "meta": {
         "label": "Graph analytics",
         "description": "Compute graphs features, find clusters and visualize them",
