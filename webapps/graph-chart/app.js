@@ -113,8 +113,19 @@ window.addEventListener('message', function(event) {
                     .then(
                         function(data){
                             console.log(`backend done`);
-                            nodesDataset = new vis.DataSet(data['nodes']);
-                            edgesDataset = new vis.DataSet(data['edges']);
+                            var nodes = data['nodes']
+                            var edges = data['edges']
+
+                            nodes.forEach(function (node) {
+                                node.title = htmlTitle(node.title)
+                            });
+
+                            edges.forEach(function (edge) {
+                                edge.title = htmlTitle(edge.title)
+                            });
+
+                            nodesDataset = new vis.DataSet(nodes);
+                            edgesDataset = new vis.DataSet(edges);
                             var groups = data['groups'];
 
                             var options = {

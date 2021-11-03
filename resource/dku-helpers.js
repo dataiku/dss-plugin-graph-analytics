@@ -40,6 +40,12 @@ function isEqual(object1, object2) {
     return JSON.stringify(object1) == JSON.stringify(object2)
 }
 
+function htmlTitle(html) {
+    const container = document.createElement("div");
+    container.style.textAlign = "left";
+    container.innerHTML = html;
+    return container;
+}
 
 dataiku.webappBackend = (function() {
     function getUrl(path) {
