@@ -109,7 +109,7 @@ window.addEventListener('message', function(event) {
                 return;
             } else {        
                 console.log(`calling backend`);
-                dataiku.webappBackend.get('get_graph_data', {"config": JSON.stringify(plugin_config), "filters": JSON.stringify(filters), "scale_ratio": scale_ratio})
+                dataiku.webappBackend.post('get_graph_data', {"config": JSON.stringify(plugin_config), "filters": JSON.stringify(filters), "scale_ratio": scale_ratio})
                     .then(
                         function(data){
                             console.log(`backend done`);
