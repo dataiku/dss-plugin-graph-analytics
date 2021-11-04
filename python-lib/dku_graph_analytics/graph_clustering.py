@@ -1,4 +1,4 @@
-from constants import Constants
+from dku_constants import Constants
 import logging
 
 

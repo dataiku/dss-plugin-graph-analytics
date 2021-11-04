@@ -1,6 +1,6 @@
 from dataiku.customrecipe import get_recipe_config
-from utils import get_input_dataset, get_output_dataset, get_analytics_recipe_params, AlgorithmError
-from constants import Constants
+from dku_utils import get_input_dataset, get_output_dataset, get_analytics_recipe_params, AlgorithmError
+from dku_constants import Constants
 from dku_graph_analytics.graph_analytics import GRAPH_ALGORITHMS
 import logging
 import time

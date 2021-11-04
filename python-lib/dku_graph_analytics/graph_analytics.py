@@ -1,5 +1,5 @@
 import networkx as nx
-from constants import Constants
+from dku_constants import Constants
 
 
 GRAPH_ALGORITHMS = {
