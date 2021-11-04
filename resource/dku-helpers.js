@@ -56,13 +56,10 @@ dataiku.webappBackend = (function() {
         console.warn("backend error: ", error);
     }
 
-    function get(path, args={}, displayErrors=true) {
-        return fetch(getUrl(path) + '?' + $.param(args), {
-            method: 'GET',
-            headers: {
-                'Accept': 'application/json',
-                'Content-Type': 'application/json'
-            }
+    function post(path, args = {}, displayErrors = true) {
+        return fetch(getUrl(path), {
+            method: 'POST',
+            body: JSON.stringify(args)
         })
         .then(response => {
             if (response.status == 502) {
@@ -85,7 +82,7 @@ dataiku.webappBackend = (function() {
         });
     }
 
-    return Object.freeze({getUrl, get});
+    return Object.freeze({getUrl, post});
 })();
 
 

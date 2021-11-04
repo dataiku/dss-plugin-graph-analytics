@@ -4,7 +4,7 @@ import numpy as np
 import pandas as pd
 import logging
 import igraph
-from constants import EXISTING_COLORS
+from dku_constants import EXISTING_COLORS
 
 
 class Graph:

@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from dataiku.customrecipe import get_recipe_config
-from utils import get_input_dataset, get_output_dataset, get_bipartite_recipe_params
-from constants import Constants
+from dku_utils import get_input_dataset, get_output_dataset, get_bipartite_recipe_params
+from dku_constants import Constants
 import pandas as pd
 import networkx as nx
 from networkx.algorithms import bipartite
