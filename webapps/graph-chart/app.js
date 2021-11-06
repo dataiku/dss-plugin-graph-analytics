@@ -187,6 +187,10 @@ window.addEventListener('message', function(event) {
                             allNodes = nodesDataset.get({ returnType: "Object" });
 
                             network.on("doubleClick", neighbourhoodHighlight);
+
+                            network.on("showPopup", function (params) {
+                                styleTooltip();
+                            });
                         }
                     ).catch(error => {
                         console.warn("just catched an error")
