@@ -40,6 +40,23 @@ function isEqual(object1, object2) {
     return JSON.stringify(object1) == JSON.stringify(object2)
 }
 
+function htmlTitle(html) {
+    const container = document.createElement("div");
+    container.innerHTML = html;
+    return container;
+}
+
+function styleTooltip() {
+    var tooltipContainer = document.getElementsByClassName("vis-tooltip")[0];
+    tooltipContainer.style.textAlign = "left";
+    tooltipContainer.style.padding = "10px";
+    tooltipContainer.style.fontSize = "12px";
+    tooltipContainer.style.backgroundColor = "#ffffff";
+    tooltipContainer.style.border = "2px solid rgba(38, 120, 177, 0.75)";
+    tooltipContainer.style.boxShadow = "3px 3px 3px 3px #dddddd";
+    tooltipContainer.style.borderRadius = "8px";
+    tooltipContainer.style.zIndex = "4000";
+}
 
 dataiku.webappBackend = (function() {
     function getUrl(path) {

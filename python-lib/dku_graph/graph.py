@@ -155,20 +155,20 @@ class Graph:
 
     def _add_node_title(self, node_params):
         """ create a nice title string to display on node popup """
-        title = "id: {}".format(node_params['id'])
+        title = "id: <b>{}</b>".format(node_params['id'])
         if 'group' in node_params:
-            title += "<br>color: {}".format(node_params['group'])
+            title += "<br>color: <b>{}</b>".format(node_params['group'])
         if 'value' in node_params:
-            title += "<br>size: {}".format(node_params['value'])
+            title += "<br>size: <b>{}</b>".format(node_params['value'])
         node_params['title'] = title
 
     def _add_edge_title(self, edge_params):
         """ create a nice title string to display on edge popup """
-        title = "{} -> {}".format(edge_params['from'], edge_params['to'])
+        title = "<b>{}</b> -> <b>{}</b>".format(edge_params['from'], edge_params['to'])
         if 'label' in edge_params:
-            title += "<br>caption: {}".format(edge_params['label'])
+            title += "<br>caption: <b>{}</b>".format(edge_params['label'])
         if 'value' in edge_params:
-            title += "<br>width: {}".format(edge_params['value'])
+            title += "<br>width: <b>{}</b>".format(edge_params['value'])
         edge_params['title'] = title
 
     def _null_node(self, node):
