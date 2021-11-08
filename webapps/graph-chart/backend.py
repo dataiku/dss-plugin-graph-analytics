@@ -14,12 +14,14 @@ def convert_numpy_int64_to_int(o):
     raise TypeError
 
 
-@app.route('/get_graph_data')
+@app.route('/get_graph_data', methods=['POST'])
 def get_graph_data():
     try:
-        config = json.loads(request.args.get('config', None))
-        filters = json.loads(request.args.get('filters', None))
-        scale_ratio = float(request.args.get('scale_ratio', 1))
+        data = json.loads(request.data)
+
+        config = json.loads(data.get('config', None))
+        filters = json.loads(data.get('filters', None))
+        scale_ratio = float(data.get('scale_ratio', 1))
 
         dataset_name = config.get('dataset_name')
 
