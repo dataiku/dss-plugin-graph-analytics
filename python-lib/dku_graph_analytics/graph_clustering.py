@@ -1,4 +1,4 @@
-from dku_constants import Constants
+from graph_analytics_constants import Constants
 import logging
 
 
