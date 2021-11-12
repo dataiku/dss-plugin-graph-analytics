@@ -1,6 +1,6 @@
 import dataiku
 from dataiku.customrecipe import get_input_names_for_role, get_output_names_for_role
-from dku_constants import Constants
+from graph_analytics_constants import Constants
 
 
 class AlgorithmError(Exception):
