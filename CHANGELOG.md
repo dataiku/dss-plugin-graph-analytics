@@ -1,5 +1,8 @@
 # Changelog
 
+## Version 1.0.5 - Enhancement - 2022 - 05
+- Make custom chart works without internet
+
 ## [Version 1.0.4](https://github.com/dataiku/dss-plugin-graph-analytics/releases/tag/v1.0.4) - Bugfix release - 2021-11
 - Rename some modules to more specific names
 
