@@ -38,7 +38,8 @@ recipe_config = get_recipe_config()
 columns = []
 columns.append(recipe_config['source_nodes'])
 columns.append(recipe_config['target_nodes'])
-columns.append(recipe_config['edges_label'])
+for col in recipe_config['edges_label']:
+  columns.append(col)
 
 # Recipe input
 input_df = input_dataset.get_dataframe(columns=columns)
@@ -66,7 +67,7 @@ for node in recipe_config["nodes"]:
 
 # Write output dataframe
 output_df = pd.DataFrame(list(node_ego_graph.edges(data=True)))
-output_df.columns = [recipe_config['source_nodes'], recipe_config['target_nodes'], recipe_config['edges_label']] 
+output_df.columns = [recipe_config['source_nodes'], recipe_config['target_nodes'], "Edges labels"] 
 
 logging.info("Ego graph - Ego graph computed")
 

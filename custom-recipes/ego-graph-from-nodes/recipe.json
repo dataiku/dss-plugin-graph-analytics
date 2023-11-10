@@ -41,7 +41,7 @@
     {
       "name": "edges_label",
       "label": "Edges label",
-      "type": "COLUMN",
+      "type": "COLUMNS",
       "columnRole":"Input Dataset"
     },
     {
