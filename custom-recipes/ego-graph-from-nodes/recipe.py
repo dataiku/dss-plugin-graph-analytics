@@ -55,10 +55,6 @@ logging.info("Ego graph - Deduplicated dataset created")
 
 # Creating the directed graph
 graph = nx.from_pandas_edgelist(deduplicated_df, recipe_config['source_nodes'], recipe_config['target_nodes'], recipe_config['edges_label'], nx.DiGraph)
-# graph = nx.DiGraph()
-# graph.add_nodes_from(deduplicated_df[recipe_config['source_nodes']].unique())
-# graph.add_nodes_from(deduplicated_df[recipe_config['target_nodes']].unique())
-# graph.add_edges_from(zip(deduplicated_df[recipe_config['source_nodes']], deduplicated_df[recipe_config['target_nodes']], deduplicated_df[recipe_config['edges_label']]))
 logging.info("Base NetworkX graph created")
 
 node_ego_graph = nx.DiGraph()
