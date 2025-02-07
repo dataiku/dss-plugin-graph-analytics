@@ -4,8 +4,7 @@
     "PYTHON38",
     "PYTHON39",
     "PYTHON310",
-    "PYTHON311",
-    "PYTHON312"
+    "PYTHON311"
   ],
   "corePackagesSet": "AUTO",
   "forceConda": false,
