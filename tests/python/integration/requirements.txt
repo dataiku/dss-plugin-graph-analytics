@@ -1,4 +1,3 @@
-pandas>=1.0,<1.1
 pytest==9.0.3
 dataiku-api-client
 git+https://github.com/dataiku/dataiku-plugin-tests-utils.git@master#egg=dataiku-plugin-tests-utils
