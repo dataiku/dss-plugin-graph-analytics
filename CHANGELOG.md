@@ -2,9 +2,8 @@
 
 ## [Version 2.0.0](https://github.com/dataiku/dss-plugin-graph-analytics/releases/tag/v2.0.0) - Security update - 2026-04
 - Bumped `flask` to 3.1.3 to fix CVE-2026-27205
-- Remove support for Python 2.X, 3.6
+- Remove support for Python3.6
 - Update dependencies
-- Update tags and category
 
 ## [Version 1.0.5](https://github.com/dataiku/dss-plugin-graph-analytics/releases/tag/v1.0.5) - Feature release - 2025-02
 - Add support for more python 3.8, 3.9, 3.10, 3.11
