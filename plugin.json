@@ -1,6 +1,6 @@
 {
     "id": "graph-analytics",
-    "version": "1.0.5",
+    "version": "2.0.0",
     "meta": {
         "label": "Graph analytics",
         "description": "Compute graphs features, find clusters and visualize them",
@@ -8,6 +8,7 @@
         "icon": "icon-link",
         "licenseInfo": "Apache Software License",
         "url": "https://www.dataiku.com/dss/plugins/info/graph-analytics.html",
-        "tags": ["Graph"]
+        "tags": ["Graph", "Data Preparation", "Analytics"],
+        "category": "Graph"
     }
 }
