@@ -2,13 +2,14 @@
     "id": "graph-analytics",
     "version": "2.0.0",
     "meta": {
-        "label": "Graph analytics",
+        "label": "Graph analytics (deprecated)",
         "description": "Compute graphs features, find clusters and visualize them",
         "author": "Dataiku",
         "icon": "icon-link",
         "licenseInfo": "Apache Software License",
         "url": "https://www.dataiku.com/dss/plugins/info/graph-analytics.html",
         "tags": ["Graph", "Data Preparation", "Analytics"],
-        "category": "Graph"
+        "category": "Graph",
+        "deprecated": true
     }
 }
