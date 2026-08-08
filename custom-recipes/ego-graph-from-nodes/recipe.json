@@ -1,0 +1,70 @@
+{
+  "meta": {
+    "label": "Ego graph from nodes",
+    "description": "Returns induced subgraph of neighbors centered at selected nodes within a given radius",
+    "icon": "icon-link"
+  },
+
+  "kind": "PYTHON",
+
+  "selectableFromDataset" : "Input Dataset",
+  "inputRoles" : [
+    {
+      "name": "Input Dataset",
+      "arity": "UNARY",
+      "required": true,
+      "acceptsDataset": true
+    }
+  ],
+  "outputRoles" : [
+    {
+      "name": "Output Dataset",
+      "arity": "UNARY",
+      "required": true,
+      "acceptsDataset": true
+    }
+  ],
+
+  "params": [
+    {
+      "name": "source_nodes",
+      "label": "Source nodes",
+      "type": "COLUMN",
+      "columnRole":"Input Dataset"
+    },
+    {
+      "name": "target_nodes",
+      "label": "Target nodes",
+      "type": "COLUMN",
+      "columnRole":"Input Dataset"
+    },
+    {
+      "name": "edges_label",
+      "label": "Edges label",
+      "type": "COLUMNS",
+      "columnRole":"Input Dataset"
+    },
+    {
+      "name": "weighted",
+      "label": "Weighted graph",
+      "type": "BOOLEAN",
+      "defaultValue": false,
+      "description": ""
+    },
+    {
+      "name": "nodes",
+      "label": "Nodes",
+      "type": "STRINGS",
+      "description": ""
+    },
+    {
+      "name": "ego_graph_radius",
+      "label": "Ego graph radius",
+      "type": "INT",
+      "defaultValue": 2,
+      "description": ""
+    }
+  ],
+
+  "resourceKeys": []
+}
